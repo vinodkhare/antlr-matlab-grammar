@@ -1,0 +1,1 @@
+java -cp ".;D:\Software\Antlr\antlr-4.7-complete.jar" org.antlr.v4.gui.TestRig MATLAB matlabFile -gui -tokens -tree $1
