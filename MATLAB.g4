@@ -1,135 +1,226 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 grammar MATLAB;
 
-NewLine: ('\r' '\n' | '\n' | '\r') -> skip;
-Space: ' ' -> skip;
+//
+// ==================================================================
+//
+// PARSER RULES
+//
 
-fragment
-Integer: [0-9]+;
+NL : '\n' -> channel(HIDDEN);
 
-String : '\'' ( ~('\'' | '\n' | '\r'))* '\'';
+file: scriptMFile | functionMFile ;
 
-fragment
-NumericSign: ('+' | '-')?;
+functionMFile  : f_def_line f_body RETURNS? ENDS?
+                ;
 
-fragment
-    Decimal: Integer '.'?
-           | Integer* '.' Integer;
+f_def_line	:	FUNCTION ID '=' ID f_input
+		|	FUNCTION ID f_input
+		;
 
-fragment
-    Exponent: ('e' | 'E') NumericSign Integer;
+f_input		:
+		| '(' ')'
+		| '(' f_argument_list ')'
+		;
 
-Number: Decimal Exponent?;
+f_argument_list	: ID ',' f_argument_list
+		| ID
+		;
 
-And: '&&';
-Ampersand: '&';
-BraceLeft: '{';
-BraceRight: '}';
-Caret: '^';
-Colon: ':';
-SemiColon: ';';
-Comma: ',';
-Dot: '.';
-DoubleQuote: '"';
-SingleQuote: '\'';
-End: 'end';
-Equals: '=';
-Function: 'function';
-LessThan: '<';
-GreaterThan: '>';
-Minus: '-';
-Or: '||';
-ParenthesisLeft: '(';
-ParenthesisRight: ')';
-Percent: '%';
-Pipe: '|';
-Plus: '+';
-Return: 'return';
+f_body		:	(   statement (';'|NL)
+        |   NL
+        )*
+            ;
 
-SlashBackward: '\\';
-SlashForward: '/';
-SquareBracketLeft: '[';
-SquareBracketRight: ']';
-Star: '*';
-Tilde: '~';
-UnderScore: '_';
 
-Comment: '%' .*? NewLine -> skip;
-Identifier: [_0-9a-zA-Z]+;
+scriptMFile:   (   statement (';'|NL)
+        |   NL
+        )*
+        EOF
+    ;
 
-transpose: rValue SingleQuote
-         ;
 
-arrayElements: rValue (Comma? rValue)*
+statement   : ID 
+          | assignment
+          | expr
+          | command_form
+          | for_command
+          | if_command
+          | global_command
+          | while_command
+          | return_command
+            ;	
+
+assignment  : reference '=' expr
+            ;
+
+reference   : ID
+            | ID '(' argument_list ')'
+            ;
+
+argument_list	: ':'
+		| expr
+		| ':' ',' argument_list
+		| expr ',' argument_list
+		;
+
+
+command_form : ID command_args
+             ;
+command_args : ID+ // FIXME!!
              ;
 
-matrix: SquareBracketLeft arrayElements (SemiColon arrayElements)* SquareBracketRight
-      ;
+for_command : FOR ID '=' expr END
+            ;
 
-assignment: lValue Equals expression
-          | lValue Equals matrix
-          ;
+if_command : IF expr END
+           ;
 
-empty: SquareBracketLeft SquareBracketRight;
+global_command	: GLOBAL ID+
+		;
 
-end: End;
+while_command : WHILE expr END
+              ;
 
-expression: end
-          | field
-          | functionCall 
-          | identifier 
-          | number
-          | string
-          | transpose
-          | Minus expression
-          | Tilde expression
-          | expression Caret expression
-          | expression Minus expression
-          | expression Plus expression
-          | expression SlashForward expression
-          | expression Star expression
-          | expression SingleQuote
-          | expression (Colon expression)? Colon expression
-          | Colon
-          ;
+return_command : RETURNS
+               ;
 
-field: Identifier Dot Identifier;
+expr: '(' expr ')'
+	| expr '.^' expr
+	| expr '^' expr
+	| '~' expr
+	| '+' expr
+	| '-' expr
+	| expr '*' expr
+	| expr RIGHTDIV expr
+	| expr '/' expr
+	| expr '.*' expr
+	| expr EL_RIGHTDIV expr
+	| expr './' expr
+	| expr '+' expr
+	| expr '-' expr
+	| expr ':' expr 
+	| expr '<' expr
+	| expr '<=' expr
+	| expr '>' expr
+	| expr '>=' expr
+	| expr '=' expr
+	| expr '~=' expr
+	| expr '&&' expr
+	| expr '||' expr
+	| expr '&' expr
+	| expr '|' expr
+	| expr '==' expr
+	| fieldAccess
+	| reference
+    | (INT | FLOAT | STRING);
 
-functionCall: Identifier ParenthesisLeft functionArguments ParenthesisRight
-        | field ParenthesisLeft functionArguments ParenthesisRight
-        ;
+fieldAccess: ID '.(' ID ')'
+		   | ID '.' ID
+		   ; 
 
-functionDeclaration: Function (outputArguments Equals)* Identifier ParenthesisLeft? (Identifier (Comma Identifier)*)* ParenthesisRight? statement* (Return | End)*;
+//// LEXER RULES
 
-identifier: Identifier;
+// language keywords
+BREAK	   : 'break';
+CASE	   : 'case';
+CATCH	   : 'catch';
+CONTINUE   : 'continue';
+ELSE	   : 'else';
+ELSEIF	   : 'elseif';
+END	   : 'end';
+FOR	   : 'for';
+FUNCTION   : 'function';
+GLOBAL	   : 'global';
+IF	   : 'if';
+OTHERWISE  : 'otherwise';
+PERSISTENT : 'persistent';
+RETURNS	   : 'return';
+SWITCH	   : 'switch';
+TRY	   : 'try';
+VARARGIN   : 'varargin';
+WHILE	   : 'while';
+CLEAR	   : 'clear';
 
-functionArguments: ; 
+ENDS	  : END SEMI? ;
 
-lValue: field
-      | functionCall
-      | identifier
-      | outputArguments
-      ;
+//
+// operators and assignments
+//
 
-simpleRValues: Identifier
-             | Number
-             | matrix;
+DOUBLE_EQ : '==';
+LOG_OR	  : '||';
+LOG_AND	  : '&&';
+LSTE	  : '<=';
+GRTE	  : '>=';
+NEQ	  : '~=';
 
-rValue: simpleRValues
-      | rValue (Comma rValue)*
-      | rValue Caret rValue
-      ;
+EL_TIMES	: '.*';
+EL_LEFTDIV	: './';
+EL_RIGHTDIV	: '.\\';
+EL_EXP	: '.^';
+EL_CCT	: '.\'';
 
-newLine: NewLine;
+EQ	: '=';
 
-number: Number;
+BIN_OR	: '|';
+BIN_AND	: '&';
 
-outputArgument: (Identifier | Tilde);
+LST	: '<';
+GRT	: '>';
 
-outputArguments: SquareBracketLeft outputArgument (Comma outputArgument)* SquareBracketRight
-               | empty;
+COLON	: ':';
 
-statement: assignment SemiColon;
+PLUS	: '+';
+MINUS	: '-';
+NEG	: '~';
+TIMES	: '*';
 
-string: String;
+LEFTDIV	: '/';
+RIGHTDIV: '\\';
 
-matlabFile: (field | newLine | statement | functionDeclaration)* EOF;
+EXP	: '^';
+
+CCT	: '\'';
+
+// Other useful language snippets
+SEMI	: ';';
+LPAREN	: '(';
+RPAREN	: ')';
+LBRACE	: '{';
+RBRACE	: '}';
+LSBRACE	: '[';
+RSBRACE	: ']';
+AT	: '@';
+DOT	: '.';
+COMMA	: ',';
+
+// comments
+BLOCKCOMMENT: '%{' .*?  '%}' -> channel(HIDDEN);
+
+COMMENT: '%' .*? NL  -> channel(HIDDEN);
+
+THREEDOTS: ('...' NL) -> skip;
+
+// identifiers, strings, numbers, whitespace
+ID: [a-zA-Z] [a-zA-Z0-9_]*;
+
+INT: DIGIT+;
+
+FLOAT: DIGIT+ '.' DIGIT* EXPONENT?
+     | DIGIT+ EXPONENT
+     | '.' DIGIT+ EXPONENT?;
+
+fragment
+EXPONENT: ('e'|'E') ('+'|'-')? DIGIT+;
+
+fragment
+DIGIT: [0-9];
+
+STRING : '\'' ( ~('\'') )* '\'';
+
+WS : [ \t] -> skip;
