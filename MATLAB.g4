@@ -37,26 +37,34 @@ f_body		:	(   statement (';'|NL)
             ;
 
 
-scriptMFile:   (   statement (';'|NL)
-        |   NL
-        )*
-        EOF
-    ;
+scriptMFile:   (statement | NL)* EOF;
 
 
-statement   : ID 
-          | assignment
-          | expr
-          | command_form
-          | for_command
-          | if_command
-          | global_command
-          | while_command
-          | return_command
-            ;	
+statement: (ID 
+         | assignment
+         | expr
+         | command_form
+         | for_command
+         | if_command
+         | global_command
+         | while_command
+         | return_command)
+		 (SemiColon | NL)
+         ;	
 
-assignment  : reference '=' expr
-            ;
+assignment: reference '=' expr
+		  | functionCallOutput Equals functionCall
+          ;
+
+functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
+			| ID Dot functionCall
+			;
+
+functionCallInput: expr (Comma expr)*;
+
+functionCallOutput: LeftSquareBracket ID (Comma ID)* RightSquareBracket
+				  | ID
+				  ;
 
 reference   : ID
             | ID '(' argument_list ')'
@@ -90,6 +98,7 @@ return_command : RETURNS
                ;
 
 expr: '(' expr ')'
+	| expr SingleQuote
 	| expr '.^' expr
 	| expr '^' expr
 	| '~' expr
@@ -115,9 +124,12 @@ expr: '(' expr ')'
 	| expr '&' expr
 	| expr '|' expr
 	| expr '==' expr
+	| array
 	| fieldAccess
 	| reference
     | (INT | FLOAT | STRING);
+
+array: LeftSquareBracket expr (Comma expr)* RightSquareBracket;
 
 fieldAccess: ID '.(' ID ')'
 		   | ID '.' ID
@@ -146,7 +158,7 @@ VARARGIN   : 'varargin';
 WHILE	   : 'while';
 CLEAR	   : 'clear';
 
-ENDS	  : END SEMI? ;
+ENDS	  : END SemiColon? ;
 
 //
 // operators and assignments
@@ -165,7 +177,7 @@ EL_RIGHTDIV	: '.\\';
 EL_EXP	: '.^';
 EL_CCT	: '.\'';
 
-EQ	: '=';
+Equals: '=';
 
 BIN_OR	: '|';
 BIN_AND	: '&';
@@ -185,19 +197,19 @@ RIGHTDIV: '\\';
 
 EXP	: '^';
 
-CCT	: '\'';
+SingleQuote: '\'';
 
 // Other useful language snippets
-SEMI	: ';';
-LPAREN	: '(';
-RPAREN	: ')';
+SemiColon: ';';
+LeftParenthesis: '(';
+RightParenthesis: ')';
 LBRACE	: '{';
 RBRACE	: '}';
-LSBRACE	: '[';
-RSBRACE	: ']';
+LeftSquareBracket: '[';
+RightSquareBracket: ']';
 AT	: '@';
-DOT	: '.';
-COMMA	: ',';
+Dot	: '.';
+Comma: ',';
 
 // comments
 BLOCKCOMMENT: '%{' .*?  '%}' -> channel(HIDDEN);
@@ -221,6 +233,6 @@ EXPONENT: ('e'|'E') ('+'|'-')? DIGIT+;
 fragment
 DIGIT: [0-9];
 
-STRING : '\'' ( ~('\'') )* '\'';
+STRING : '\'' ( ~('\'' | '\r' | '\n') )* '\'';
 
 WS : [ \t] -> skip;
