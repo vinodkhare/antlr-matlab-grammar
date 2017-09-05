@@ -42,7 +42,7 @@ statement: (ID
          | while_command
          | return_command
 		 | forStatement
-		 | whileStatement)
+		 | whileStatement)*
 		 (',' | SemiColon | NL)
          ;
 
