@@ -15,8 +15,8 @@ NL : '\n' -> channel(HIDDEN);
 
 file: scriptMFile | functionMFile ;
 
-functionMFile  : f_def_line f_body RETURNS? ENDS?
-                ;
+functionMFile: f_def_line f_body RETURNS? ENDS?
+             ;
 
 f_def_line	:	FUNCTION ID '=' ID f_input
 		|	FUNCTION ID f_input
@@ -53,7 +53,7 @@ statement: (ID
          ;	
 
 assignment: reference '=' expr
-		  | functionCallOutput Equals functionCall
+		  | functionCallOutput Equals expr
           ;
 
 functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
@@ -66,9 +66,7 @@ functionCallOutput: LeftSquareBracket ID (Comma ID)* RightSquareBracket
 				  | ID
 				  ;
 
-reference   : ID
-            | ID '(' argument_list ')'
-            ;
+reference: ID;
 
 argument_list	: ':'
 		| expr
@@ -76,28 +74,29 @@ argument_list	: ':'
 		| expr ',' argument_list
 		;
 
-
 command_form : ID command_args
              ;
+
 command_args : ID+ // FIXME!!
              ;
 
-for_command : FOR ID '=' expr END
+for_command : FOR ID '=' expr End
             ;
 
-if_command : IF expr END
+if_command : IF expr End
            ;
 
 global_command	: GLOBAL ID+
 		;
 
-while_command : WHILE expr END
+while_command : WHILE expr End
               ;
 
 return_command : RETURNS
                ;
 
-expr: '(' expr ')'
+expr: functionCall
+	| '(' expr ')'
 	| expr SingleQuote
 	| expr '.^' expr
 	| expr '^' expr
@@ -125,11 +124,24 @@ expr: '(' expr ')'
 	| expr '|' expr
 	| expr '==' expr
 	| array
+	| arrayAccess
 	| fieldAccess
 	| reference
     | (INT | FLOAT | STRING);
 
-array: LeftSquareBracket expr (Comma expr)* RightSquareBracket;
+array: LeftSquareBracket expr (Comma* expr)* RightSquareBracket
+	 ;
+
+arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
+		   ;
+
+arrayAccessInput: arrayAccessExpression (Comma arrayAccessExpression)*
+				;
+
+arrayAccessExpression: expr
+					 | Colon
+					 | End
+					 ;
 
 fieldAccess: ID '.(' ID ')'
 		   | ID '.' ID
@@ -144,7 +156,7 @@ CATCH	   : 'catch';
 CONTINUE   : 'continue';
 ELSE	   : 'else';
 ELSEIF	   : 'elseif';
-END	   : 'end';
+End	   : 'end';
 FOR	   : 'for';
 FUNCTION   : 'function';
 GLOBAL	   : 'global';
@@ -158,7 +170,7 @@ VARARGIN   : 'varargin';
 WHILE	   : 'while';
 CLEAR	   : 'clear';
 
-ENDS	  : END SemiColon? ;
+ENDS	  : End SemiColon?;
 
 //
 // operators and assignments
@@ -185,7 +197,7 @@ BIN_AND	: '&';
 LST	: '<';
 GRT	: '>';
 
-COLON	: ':';
+Colon: ':';
 
 PLUS	: '+';
 MINUS	: '-';
