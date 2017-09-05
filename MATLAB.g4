@@ -13,32 +13,23 @@ grammar MATLAB;
 
 NL : '\n' -> channel(HIDDEN);
 
-file: scriptMFile | functionMFile ;
+file: scriptMFile | functionDefinition*
+	;
 
-functionMFile: f_def_line f_body RETURNS? ENDS?
-             ;
+functionDefinition: functionDefinitionLine  statement* 'return'? 'end'?
+				  ;
 
-f_def_line	:	FUNCTION ID '=' ID f_input
-		|	FUNCTION ID f_input
-		;
+functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
+					  ;
 
-f_input		:
-		| '(' ')'
-		| '(' f_argument_list ')'
-		;
+functionOutputArguments: LeftSquareBracket (ID (Comma ID)*)* RightSquareBracket
+				  	   | ID
+					   ;
 
-f_argument_list	: ID ',' f_argument_list
-		| ID
-		;
-
-f_body		:	(   statement (';'|NL)
-        |   NL
-        )*
-            ;
-
+functionInputArguments: (ID (Comma ID)*)*
+					  ;
 
 scriptMFile:   (statement | NL)* EOF;
-
 
 statement: (ID 
          | assignment
