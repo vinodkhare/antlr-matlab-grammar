@@ -11,12 +11,12 @@ grammar MATLAB;
 // PARSER RULES
 //
 
-NL : '\n' -> channel(HIDDEN);
+NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
 
 file: scriptMFile | functionDefinition*
 	;
 
-functionDefinition: functionDefinitionLine  statement* 'return'? 'end'?
+functionDefinition: functionDefinitionLine statement* 'return'? 'end'?
 				  ;
 
 functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
@@ -29,7 +29,8 @@ functionOutputArguments: LeftSquareBracket (ID (Comma ID)*)* RightSquareBracket
 functionInputArguments: (ID (Comma ID)*)*
 					  ;
 
-scriptMFile:   (statement | NL)* EOF;
+scriptMFile: (statement | NL)* EOF
+		   ;
 
 statement: (ID 
          | assignment
@@ -39,9 +40,17 @@ statement: (ID
          | if_command
          | global_command
          | while_command
-         | return_command)
-		 (SemiColon | NL)
-         ;	
+         | return_command
+		 | forStatement
+		 | whileStatement)
+		 (',' | SemiColon | NL)
+         ;
+
+whileStatement: 'while' expr statement* 'end'
+			  ;
+
+forStatement: 'for' reference '=' expr statement* 'end'
+			;
 
 assignment: reference '=' expr
 		  | functionCallOutput Equals expr
@@ -51,19 +60,23 @@ functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
 			| ID Dot functionCall
 			;
 
-functionCallInput: expr (Comma expr)*;
+functionCallInput: expr (Comma expr)*
+				 ;
 
-functionCallOutput: LeftSquareBracket ID (Comma ID)* RightSquareBracket
-				  | ID
+functionCallOutput: LeftSquareBracket functionCallOutputArgument (Comma functionCallOutputArgument)* RightSquareBracket
+				  | reference
 				  ;
+
+functionCallOutputArgument: (reference | '~')
+						  ;
 
 reference: ID;
 
-argument_list	: ':'
-		| expr
-		| ':' ',' argument_list
-		| expr ',' argument_list
-		;
+argument_list: ':'
+			| expr
+			| ':' ',' argument_list
+			| expr ',' argument_list
+			;
 
 command_form : ID command_args
              ;
@@ -120,8 +133,11 @@ expr: functionCall
 	| reference
     | (INT | FLOAT | STRING);
 
-array: LeftSquareBracket expr (Comma* expr)* RightSquareBracket
+array: LeftSquareBracket arrayLine (';' arrayLine)* RightSquareBracket
 	 ;
+
+arrayLine: expr (Comma* expr)*
+		 ;
 
 arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
 		   ;
@@ -139,6 +155,9 @@ fieldAccess: ID '.(' ID ')'
 		   ; 
 
 //// LEXER RULES
+
+// Multiline statement
+Elipsis: '...' NL -> skip;
 
 // language keywords
 BREAK	   : 'break';
