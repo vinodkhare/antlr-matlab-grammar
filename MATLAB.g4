@@ -34,7 +34,7 @@ scriptMFile: (statement | NL)* EOF
 
 statement: (ID 
          | assignment
-         | expr
+         | expression
          | command_form
          | for_command
          | if_command
@@ -47,31 +47,31 @@ statement: (ID
 		 (',' | SemiColon | NL)
          ;
 
-forStatement: 'for' reference '=' expr statement* END
+forStatement: 'for' reference '=' expression statement* END
 			;
 
 if_statement:
-	IF expr
+	IF expression
 		statement*
-	(ELSEIF expr
+	(ELSEIF expression
 		statement*)*
 	(ELSE
 		statement*)?
 	END
 ;
 
-whileStatement: 'while' expr statement* END
+whileStatement: 'while' expression statement* END
 			  ;
 
-assignment: reference '=' expr
-		  | functionCallOutput Equals expr
+assignment: reference '=' expression
+		  | functionCallOutput Equals expression
           ;
 
 functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
 			| ID Dot functionCall
 			;
 
-functionCallInput: expr (Comma expr)*
+functionCallInput: expression (Comma expression)*
 				 ;
 
 functionCallOutput: LeftSquareBracket functionCallOutputArgument (Comma functionCallOutputArgument)* RightSquareBracket
@@ -84,9 +84,9 @@ functionCallOutputArgument: (reference | '~')
 reference: ID;
 
 argument_list: ':'
-			| expr
+			| expression
 			| ':' ',' argument_list
-			| expr ',' argument_list
+			| expression ',' argument_list
 			;
 
 command_form : ID command_args
@@ -95,49 +95,49 @@ command_form : ID command_args
 command_args : ID+ // FIXME!!
              ;
 
-for_command : FOR ID '=' expr END
+for_command : FOR ID '=' expression END
             ;
 
-if_command : IF expr END
+if_command : IF expression END
            ;
 
 global_command	: GLOBAL ID+
 		;
 
-while_command : WHILE expr END
+while_command : WHILE expression END
               ;
 
 return_command : RETURNS
                ;
 
-expr: functionCall
-	| '(' expr ')'
-	| expr SingleQuote
-	| expr '.^' expr
-	| expr '^' expr
-	| '~' expr
-	| '+' expr
-	| '-' expr
-	| expr '*' expr
-	| expr RIGHTDIV expr
-	| expr '/' expr
-	| expr '.*' expr
-	| expr EL_RIGHTDIV expr
-	| expr './' expr
-	| expr '+' expr
-	| expr '-' expr
-	| expr ':' expr 
-	| expr '<' expr
-	| expr '<=' expr
-	| expr '>' expr
-	| expr '>=' expr
-	| expr '=' expr
-	| expr '~=' expr
-	| expr '&&' expr
-	| expr '||' expr
-	| expr '&' expr
-	| expr '|' expr
-	| expr '==' expr
+expression: functionCall
+	| '(' expression ')'
+	| expression SingleQuote
+	| expression '.^' expression
+	| expression '^' expression
+	| '~' expression
+	| '+' expression
+	| '-' expression
+	| expression '*' expression
+	| expression RIGHTDIV expression
+	| expression '/' expression
+	| expression '.*' expression
+	| expression EL_RIGHTDIV expression
+	| expression './' expression
+	| expression '+' expression
+	| expression '-' expression
+	| expression ':' expression 
+	| expression '<' expression
+	| expression '<=' expression
+	| expression '>' expression
+	| expression '>=' expression
+	| expression '=' expression
+	| expression '~=' expression
+	| expression '&&' expression
+	| expression '||' expression
+	| expression '&' expression
+	| expression '|' expression
+	| expression '==' expression
 	| array
 	| arrayAccess
 	| fieldAccess
@@ -147,7 +147,7 @@ expr: functionCall
 array: LeftSquareBracket arrayLine (';' arrayLine)* RightSquareBracket
 	 ;
 
-arrayLine: expr (Comma* expr)*
+arrayLine: expression (Comma* expression)*
 		 ;
 
 arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
@@ -156,7 +156,7 @@ arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
 arrayAccessInput: arrayAccessExpression (Comma arrayAccessExpression)*
 				;
 
-arrayAccessExpression: expr
+arrayAccessExpression: expression
 					 | Colon
 					 | END
 					 ;
