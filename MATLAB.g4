@@ -47,14 +47,16 @@ functionInputArguments: (ID (COMMA ID)*)*
 scriptMFile: (statement | NL)* EOF
 		   ;
 
-statement
-	: ID SemiColon?
-	| assignment SemiColon?
+statement:
+	( ID
+	| assignment
 	| if_statement
 	| for_statement
 	| whileStatement
-    | expression SemiColon?
+	| expression_list
+	| BREAK
     | RETURN
+	) SEMI_COLON?
 ;
 
 for_statement:
@@ -77,8 +79,11 @@ if_statement:
 	END
 ;
 
-whileStatement: 'while' expression statement* END
-			  ;
+whileStatement:
+	WHILE expression
+		statement*
+	END
+;
 
 assignment: reference '=' expression
 		  | functionCallOutput Equals expression
@@ -91,7 +96,7 @@ variable:
 
 function_call
 	: function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
-	| ID Dot function_call
+	| ID DOT function_call
 ;
 
 function_name:
@@ -168,7 +173,7 @@ expression
 	| array_access
 	| cell
 	| cell_access
-	| fieldAccess
+	| field_access
 	| reference
     | (INT | FLOAT | STRING | END | COLON);
 
@@ -194,9 +199,15 @@ cell:
 	LEFT_BRACE expression_list RIGHT_BRACE
 ;
 
-fieldAccess: ID '.(' ID ')'
-		   | ID '.' ID
-		   ; 
+field_access
+	: ID '.(' ID ')'
+	| ID '.' ID
+	| array_access DOT field_name
+;
+
+field_name:
+	ID
+;
 
 //// LEXER RULES
 
@@ -220,11 +231,8 @@ PERSISTENT : 'persistent';
 RETURN	   : 'return';
 SWITCH	   : 'switch';
 TRY	   : 'try';
-VARARGIN   : 'varargin';
 WHILE	   : 'while';
 CLEAR	   : 'clear';
-
-ENDS	  : END SemiColon?;
 
 //
 // operators and assignments
@@ -266,7 +274,7 @@ EXP	: '^';
 SingleQuote: '\'';
 
 // Other useful language snippets
-SemiColon: ';';
+SEMI_COLON: ';';
 LEFT_PARENTHESIS: '(';
 RIGHT_PARENTHESIS: ')';
 LEFT_BRACE	: '{';
@@ -274,7 +282,7 @@ RIGHT_BRACE	: '}';
 LeftSquareBracket: '[';
 RightSquareBracket: ']';
 AT	: '@';
-Dot	: '.';
+DOT	: '.';
 COMMA: ',';
 
 // comments
