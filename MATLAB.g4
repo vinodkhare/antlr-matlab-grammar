@@ -16,7 +16,7 @@ NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
 file: scriptMFile | functionDefinition*
 	;
 
-functionDefinition: functionDefinitionLine statement* 'return'? 'end'?
+functionDefinition: functionDefinitionLine statement* 'return'? 'END'?
 				  ;
 
 functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
@@ -38,6 +38,7 @@ statement: (ID
          | command_form
          | for_command
          | if_command
+		 | if_statement
          | global_command
          | while_command
          | return_command
@@ -46,11 +47,21 @@ statement: (ID
 		 (',' | SemiColon | NL)
          ;
 
-whileStatement: 'while' expr statement* 'end'
-			  ;
-
-forStatement: 'for' reference '=' expr statement* 'end'
+forStatement: 'for' reference '=' expr statement* END
 			;
+
+if_statement:
+	IF expr
+		statement*
+	(ELSEIF expr
+		statement*)*
+	(ELSE
+		statement*)?
+	END
+;
+
+whileStatement: 'while' expr statement* END
+			  ;
 
 assignment: reference '=' expr
 		  | functionCallOutput Equals expr
@@ -84,16 +95,16 @@ command_form : ID command_args
 command_args : ID+ // FIXME!!
              ;
 
-for_command : FOR ID '=' expr End
+for_command : FOR ID '=' expr END
             ;
 
-if_command : IF expr End
+if_command : IF expr END
            ;
 
 global_command	: GLOBAL ID+
 		;
 
-while_command : WHILE expr End
+while_command : WHILE expr END
               ;
 
 return_command : RETURNS
@@ -147,7 +158,7 @@ arrayAccessInput: arrayAccessExpression (Comma arrayAccessExpression)*
 
 arrayAccessExpression: expr
 					 | Colon
-					 | End
+					 | END
 					 ;
 
 fieldAccess: ID '.(' ID ')'
@@ -166,8 +177,8 @@ CATCH	   : 'catch';
 CONTINUE   : 'continue';
 ELSE	   : 'else';
 ELSEIF	   : 'elseif';
-End	   : 'end';
-FOR	   : 'for';
+END	   		: 'end';
+FOR	   		: 'for';
 FUNCTION   : 'function';
 GLOBAL	   : 'global';
 IF	   : 'if';
@@ -180,7 +191,7 @@ VARARGIN   : 'varargin';
 WHILE	   : 'while';
 CLEAR	   : 'clear';
 
-ENDS	  : End SemiColon?;
+ENDS	  : END SemiColon?;
 
 //
 // operators and assignments
