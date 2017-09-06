@@ -13,10 +13,10 @@ grammar MATLAB;
 
 NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
 
-file: scriptMFile | functionDefinition*
+file: scriptMFile | function_definition*
 	;
 
-functionDefinition: functionDefinitionLine statement* 'return'? 'END'?
+function_definition: functionDefinitionLine statement* 'return'? 'END'?
 				  ;
 
 functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
@@ -41,13 +41,13 @@ statement: (ID
 		 | if_statement
          | global_command
          | while_command
-		 | forStatement
+		 | for_statement
 		 | whileStatement
          | RETURN)*
 		 (',' | SemiColon | NL)
          ;
 
-forStatement:
+for_statement:
 	FOR for_index Equals expression
 		statement*
 	END
