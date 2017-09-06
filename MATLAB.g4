@@ -187,17 +187,8 @@ array_access:
 	variable LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
 ;
 
-array_access_input:
-	arrayAccessExpression (COMMA arrayAccessExpression)*
-;
-
-arrayAccessExpression: expression
-					 | COLON
-					 | END
-					 ;
-
 cell_access:
-	variable LEFT_BRACE array_access_input RIGHT_BRACE
+	variable LEFT_BRACE expression_list RIGHT_BRACE
 ;
 
 cell:
