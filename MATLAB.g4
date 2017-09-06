@@ -16,8 +16,27 @@ NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
 file: scriptMFile | function_definition*
 	;
 
-function_definition: functionDefinitionLine statement* 'return'? 'END'?
-				  ;
+function_definition:
+	FUNCTION (function_output_arguments Equals)? function_name function_input_arguments?
+		statement*
+	(RETURN | END)?
+;
+
+function_output_arguments:
+	LeftSquareBracket variable_list? RightSquareBracket
+;
+
+function_name:
+	ID
+;
+
+function_input_arguments:
+	LeftParenthesis variable_list? RightParenthesis
+;
+
+variable_list:
+	ID (Comma ID)*
+;
 
 functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
 					  ;
@@ -43,7 +62,7 @@ statement: (ID
          | while_command
 		 | for_statement
 		 | whileStatement
-         | RETURN)*
+         | RETURN)
 		 (',' | SemiColon | NL)
          ;
 
