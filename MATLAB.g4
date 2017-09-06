@@ -51,20 +51,15 @@ functionInputArguments: (ID (Comma ID)*)*
 scriptMFile: (statement | NL)* EOF
 		   ;
 
-statement: (ID 
-         | assignment
-         | expression
-         | command_form
-         | for_command
-         | if_command
-		 | if_statement
-         | global_command
-         | while_command
-		 | for_statement
-		 | whileStatement
-         | RETURN)
-		 (',' | SemiColon | NL)
-         ;
+statement
+	: ID SemiColon?
+	| assignment SemiColon?
+    | expression SemiColon?
+	| if_statement
+	| for_statement
+	| whileStatement
+    | RETURN
+;
 
 for_statement:
 	FOR for_index Equals expression
@@ -91,7 +86,16 @@ whileStatement: 'while' expression statement* END
 
 assignment: reference '=' expression
 		  | functionCallOutput Equals expression
-          ;
+		  | cell_access Equals expression
+;
+
+cell_access:
+	variable LBRACE arrayAccessInput RBRACE
+;
+
+variable:
+	ID
+;
 
 functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
 			| ID Dot functionCall
