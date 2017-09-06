@@ -26,26 +26,22 @@ function_output_arguments:
 	LeftSquareBracket variable_list? RightSquareBracket
 ;
 
-function_name:
-	ID
-;
-
 function_input_arguments:
 	LeftParenthesis variable_list? RightParenthesis
 ;
 
 variable_list:
-	ID (Comma ID)*
+	ID (COMMA ID)*
 ;
 
 functionDefinitionLine: 'function' functionOutputArguments '=' reference '(' functionInputArguments ')'
 					  ;
 
-functionOutputArguments: LeftSquareBracket (ID (Comma ID)*)* RightSquareBracket
+functionOutputArguments: LeftSquareBracket (ID (COMMA ID)*)* RightSquareBracket
 				  	   | ID
 					   ;
 
-functionInputArguments: (ID (Comma ID)*)*
+functionInputArguments: (ID (COMMA ID)*)*
 					  ;
 
 scriptMFile: (statement | NL)* EOF
@@ -89,23 +85,26 @@ assignment: reference '=' expression
 		  | cell_access Equals expression
 ;
 
-cell_access:
-	variable LBRACE arrayAccessInput RBRACE
-;
+
 
 variable:
 	ID
 ;
 
 function_call
-	: function_name LeftParenthesis functionCallInput* RightParenthesis
+	: function_name LeftParenthesis expression_list? RightParenthesis
 	| ID Dot function_call
 ;
 
-functionCallInput: expression (Comma expression)*
-				 ;
+function_name:
+	ID
+;
 
-functionCallOutput: LeftSquareBracket functionCallOutputArgument (Comma functionCallOutputArgument)* RightSquareBracket
+expression_list:
+	expression (COMMA? expression)*
+;
+
+functionCallOutput: LeftSquareBracket functionCallOutputArgument (COMMA functionCallOutputArgument)* RightSquareBracket
 				  | reference
 				  ;
 
@@ -138,7 +137,8 @@ global_command	: GLOBAL ID+
 while_command : WHILE expression END
               ;
 
-expression: function_call
+expression
+	: function_call
 	| '(' expression ')'
 	| expression SingleQuote
 	| expression '.^' expression
@@ -168,26 +168,39 @@ expression: function_call
 	| expression '==' expression
 	| array
 	| arrayAccess
+	| cell
+	| cell_access
 	| fieldAccess
 	| reference
     | (INT | FLOAT | STRING);
 
-array: LeftSquareBracket arrayLine (';' arrayLine)* RightSquareBracket
-	 ;
+array
+	: LeftSquareBracket expression_list (';' expression_list)* RightSquareBracket
+	| empty_array
+;
 
-arrayLine: expression (Comma* expression)*
-		 ;
+empty_array:
+	LeftSquareBracket RightSquareBracket
+;
 
 arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
 		   ;
 
-arrayAccessInput: arrayAccessExpression (Comma arrayAccessExpression)*
+arrayAccessInput: arrayAccessExpression (COMMA arrayAccessExpression)*
 				;
 
 arrayAccessExpression: expression
 					 | Colon
 					 | END
 					 ;
+
+cell_access:
+	variable LEFT_BRACE arrayAccessInput RIGHT_BRACE
+;
+
+cell:
+	LEFT_BRACE expression_list RIGHT_BRACE
+;
 
 fieldAccess: ID '.(' ID ')'
 		   | ID '.' ID
@@ -264,13 +277,13 @@ SingleQuote: '\'';
 SemiColon: ';';
 LeftParenthesis: '(';
 RightParenthesis: ')';
-LBRACE	: '{';
-RBRACE	: '}';
+LEFT_BRACE	: '{';
+RIGHT_BRACE	: '}';
 LeftSquareBracket: '[';
 RightSquareBracket: ']';
 AT	: '@';
 Dot	: '.';
-Comma: ',';
+COMMA: ',';
 
 // comments
 BLOCKCOMMENT: '%{' .*?  '%}' -> channel(HIDDEN);
