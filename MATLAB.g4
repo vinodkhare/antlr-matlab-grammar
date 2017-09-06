@@ -27,7 +27,7 @@ function_output_arguments:
 ;
 
 function_input_arguments:
-	LeftParenthesis variable_list? RightParenthesis
+	LEFT_PARENTHESIS variable_list? RIGHT_PARENTHESIS
 ;
 
 variable_list:
@@ -92,7 +92,7 @@ variable:
 ;
 
 function_call
-	: function_name LeftParenthesis expression_list? RightParenthesis
+	: function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
 	| ID Dot function_call
 ;
 
@@ -167,12 +167,12 @@ expression
 	| expression '|' expression
 	| expression '==' expression
 	| array
-	| arrayAccess
+	| array_access
 	| cell
 	| cell_access
 	| fieldAccess
 	| reference
-    | (INT | FLOAT | STRING);
+    | (INT | FLOAT | STRING | END | COLON);
 
 array
 	: LeftSquareBracket expression_list (';' expression_list)* RightSquareBracket
@@ -183,19 +183,21 @@ empty_array:
 	LeftSquareBracket RightSquareBracket
 ;
 
-arrayAccess: reference LeftParenthesis arrayAccessInput RightParenthesis
-		   ;
+array_access:
+	variable LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
+;
 
-arrayAccessInput: arrayAccessExpression (COMMA arrayAccessExpression)*
-				;
+array_access_input:
+	arrayAccessExpression (COMMA arrayAccessExpression)*
+;
 
 arrayAccessExpression: expression
-					 | Colon
+					 | COLON
 					 | END
 					 ;
 
 cell_access:
-	variable LEFT_BRACE arrayAccessInput RIGHT_BRACE
+	variable LEFT_BRACE array_access_input RIGHT_BRACE
 ;
 
 cell:
@@ -259,7 +261,7 @@ BIN_AND	: '&';
 LST	: '<';
 GRT	: '>';
 
-Colon: ':';
+COLON: ':';
 
 PLUS	: '+';
 MINUS	: '-';
@@ -275,8 +277,8 @@ SingleQuote: '\'';
 
 // Other useful language snippets
 SemiColon: ';';
-LeftParenthesis: '(';
-RightParenthesis: ')';
+LEFT_PARENTHESIS: '(';
+RIGHT_PARENTHESIS: ')';
 LEFT_BRACE	: '{';
 RIGHT_BRACE	: '}';
 LeftSquareBracket: '[';
