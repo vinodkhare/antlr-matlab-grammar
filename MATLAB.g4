@@ -97,9 +97,10 @@ variable:
 	ID
 ;
 
-functionCall: ID LeftParenthesis functionCallInput* RightParenthesis
-			| ID Dot functionCall
-			;
+function_call
+	: function_name LeftParenthesis functionCallInput* RightParenthesis
+	| ID Dot function_call
+;
 
 functionCallInput: expression (Comma expression)*
 				 ;
@@ -137,7 +138,7 @@ global_command	: GLOBAL ID+
 while_command : WHILE expression END
               ;
 
-expression: functionCall
+expression: function_call
 	| '(' expression ')'
 	| expression SingleQuote
 	| expression '.^' expression
