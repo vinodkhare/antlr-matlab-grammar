@@ -41,14 +41,21 @@ statement: (ID
 		 | if_statement
          | global_command
          | while_command
-         | return_command
 		 | forStatement
-		 | whileStatement)*
+		 | whileStatement
+         | RETURN)*
 		 (',' | SemiColon | NL)
          ;
 
-forStatement: 'for' reference '=' expression statement* END
-			;
+forStatement:
+	FOR for_index Equals expression
+		statement*
+	END
+;
+
+for_index:
+	ID
+;
 
 if_statement:
 	IF expression
@@ -106,9 +113,6 @@ global_command	: GLOBAL ID+
 
 while_command : WHILE expression END
               ;
-
-return_command : RETURNS
-               ;
 
 expression: functionCall
 	| '(' expression ')'
@@ -184,7 +188,7 @@ GLOBAL	   : 'global';
 IF	   : 'if';
 OTHERWISE  : 'otherwise';
 PERSISTENT : 'persistent';
-RETURNS	   : 'return';
+RETURN	   : 'return';
 SWITCH	   : 'switch';
 TRY	   : 'try';
 VARARGIN   : 'varargin';
