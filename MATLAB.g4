@@ -50,10 +50,10 @@ scriptMFile: (statement | NL)* EOF
 statement
 	: ID SemiColon?
 	| assignment SemiColon?
-    | expression SemiColon?
 	| if_statement
 	| for_statement
 	| whileStatement
+    | expression SemiColon?
     | RETURN
 ;
 
@@ -84,8 +84,6 @@ assignment: reference '=' expression
 		  | functionCallOutput Equals expression
 		  | cell_access Equals expression
 ;
-
-
 
 variable:
 	ID
@@ -183,8 +181,9 @@ empty_array:
 	LeftSquareBracket RightSquareBracket
 ;
 
-array_access:
-	variable LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
+array_access
+	: variable LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
+	| cell_access LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
 ;
 
 cell_access:
@@ -202,7 +201,7 @@ fieldAccess: ID '.(' ID ')'
 //// LEXER RULES
 
 // Multiline statement
-Elipsis: '...' NL -> skip;
+Ellipsis: '...' -> skip;
 
 // language keywords
 BREAK	   : 'break';
