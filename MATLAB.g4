@@ -31,7 +31,6 @@ variable_list:
 
 statement:
 	( assignment
-	| if_command
 	| if_statement
 	| for_statement
 	| switch_statement
@@ -55,14 +54,10 @@ rvalue_list:
 	rvalue (COMMA? rvalue)*
 ;
 
-if_command:
-	IF expression COMMA statement (ELSE statement)? END
-;
-
 if_statement:
-	IF expression
+	IF expression COMMA?
 		statement*
-	(ELSEIF expression
+	(ELSEIF expression COMMA?
 		statement*)*
 	(ELSE
 		statement*)?
