@@ -12,21 +12,17 @@ matlab_file:
 ;
 
 function_definition:
-	FUNCTION (function_output_arguments ASSIGN)? function_name function_input_arguments?
+	FUNCTION (rvalue_arguments ASSIGN)? function_name lvalue_arguments?
 		statement*
 	(RETURN | END)?
 ;
 
-function_output_arguments:
-	LEFT_SQUARE_BRACKET variable_list? RIGHT_SQUARE_BRACKET
+rvalue_arguments:
+	LEFT_SQUARE_BRACKET (variable (COMMA? variable)*)? RIGHT_SQUARE_BRACKET
 ;
 
-function_input_arguments:
-	LEFT_PARENTHESIS variable_list? RIGHT_PARENTHESIS
-;
-
-variable_list:
-	variable (COMMA? variable)*
+lvalue_arguments:
+	LEFT_PARENTHESIS ((variable | NOT) (COMMA? (variable | NOT))*)? RIGHT_PARENTHESIS
 ;
 
 statement:
@@ -48,12 +44,12 @@ statement:
 ;
 
 assignment
-	: LEFT_SQUARE_BRACKET rvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
-	| rvalue ASSIGN expression
+	: LEFT_SQUARE_BRACKET lvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
+	| lvalue ASSIGN expression
 ;
 
-rvalue_list:
-	rvalue (COMMA? rvalue)*
+lvalue_list:
+	lvalue (COMMA? lvalue)*
 ;
 
 command:
@@ -90,10 +86,10 @@ switch_statement:
 ;
 
 try_statement:
-	TRY
+	TRY COMMA?
 		statement*
-	CATCH exception?
-		statement*
+	(CATCH exception?
+		statement*)*
 	END
 ;
 
@@ -103,8 +99,10 @@ while_statement:
 	END
 ;
 
+// Things that can be assigned
 expression
-	: LEFT_PARENTHESIS expression RIGHT_PARENTHESIS		
+	: expression DOT expression
+	| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS		
 	| expression ELMENT_WISE_TRANSPOSE					
 	| expression ELMENT_WISE_POWER expression			
 	| expression TRANSPOSE								
@@ -134,9 +132,9 @@ expression
 	| array			
 	| cell												
 	| function_call										
-	| function_handle									
-	| rvalue											
-    | (INT | FLOAT | IMAGINARY | STRING | END | COLON)			
+	| function_handle								
+	| lvalue											
+    | (INT | FLOAT | IMAGINARY | STRING | END | COLON)	
 ;
 
 array:
@@ -147,25 +145,27 @@ cell:
 	LEFT_BRACE expression_list? RIGHT_BRACE
 ;
 
-function_call
-	: (namespace DOT)? function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
+function_call:
+	function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
 ;
 
 function_handle
 	: AT function_name
-	| AT function_input_arguments statement
+	| AT lvalue_arguments statement
 ;
 
-rvalue
-	: rvalue DOT rvalue
-	| rvalue LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
-	| rvalue LEFT_BRACE expression_list RIGHT_BRACE
+// Things that can be assigned *to*.
+lvalue
+	: lvalue DOT lvalue
+	| lvalue DOT LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+	| lvalue LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
+	| lvalue LEFT_BRACE expression_list RIGHT_BRACE
 	| variable
 	| NOT
 ;
 
 expression_list:
-	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)*
+	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* SEMI_COLON?
 ;
 
 command_argument:
@@ -221,7 +221,7 @@ ELMENT_WISE_POWER			: '.^';
 ELMENT_WISE_RIGHT_DIVIDE	: '.\\';
 ELMENT_WISE_TIMES			: '.*';
 ELMENT_WISE_TRANSPOSE		: '.\'';
-EQUALS						: '==';
+EQUALS						: '==' {maybeString = true;};
 GREATER_THAN_OR_EQUAL		: '>=';
 LESS_THAN_OR_EQUAL			: '<=';
 LOGICAL_AND					: '&&';
