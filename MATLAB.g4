@@ -31,6 +31,7 @@ variable_list:
 
 statement:
 	( assignment
+	| command
 	| if_statement
 	| for_statement
 	| switch_statement
@@ -53,6 +54,10 @@ assignment
 
 rvalue_list:
 	rvalue (COMMA? rvalue)*
+;
+
+command:
+	function_name command_argument+
 ;
 
 if_statement:
@@ -163,6 +168,10 @@ expression_list:
 	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)*
 ;
 
+command_argument:
+	ID
+;
+
 exception:
 	ID
 ;
@@ -205,7 +214,6 @@ RETURN	   	: 'return';
 SWITCH	   	: 'switch';
 TRY	   		: 'try';
 WHILE	   	: 'while';
-CLEAR	   	: 'clear';
 
 // Two Character Operators
 ELMENT_WISE_LEFT_DIVIDE		: './';
