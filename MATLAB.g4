@@ -34,6 +34,7 @@ statement:
 	| if_statement
 	| for_statement
 	| switch_statement
+	| try_statement
 	| while_statement
 	| expression_list
 	| function_call
@@ -80,6 +81,14 @@ switch_statement:
 			statement*)*
 		(OTHERWISE
 			statement*)?
+	END
+;
+
+try_statement:
+	TRY
+		statement*
+	CATCH exception
+		statement*
 	END
 ;
 
@@ -154,6 +163,10 @@ expression_list:
 	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)*
 ;
 
+exception:
+	ID
+;
+
 function_name:
 	ID
 ;
@@ -208,7 +221,7 @@ LOGICAL_OR					: '||';
 NOT_EQUAL					: '~=';
 
 // Single Character Operators
-ASSIGN			: '=';
+ASSIGN			: '=' {maybeString = true;};
 BINARY_AND		: '&';
 BINARY_OR		: '|';
 COLON			: ':';
@@ -244,7 +257,7 @@ COMMENT: '%' .*? NL  -> channel(HIDDEN);
 THREEDOTS: ('...' NL) -> skip;
 
 // identifiers, strings, numbers, whitespace
-ID: [a-zA-Z] [a-zA-Z0-9_]*;
+ID: [a-zA-Z] [a-zA-Z0-9_]* {maybeString = false;};
 
 IMAGINARY
 	: INT 'i'
