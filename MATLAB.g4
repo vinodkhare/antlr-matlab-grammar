@@ -1,9 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 grammar MATLAB;
+
+@lexer::members
+{
+	boolean maybeString = false;
+}
 
 //// Parser Rules
 
@@ -30,19 +30,20 @@ variable_list:
 ;
 
 statement:
-	( ID
-	| assignment
+	( assignment
 	| if_command
 	| if_statement
 	| for_statement
 	| switch_statement
 	| while_statement
 	| expression_list
+	| function_call
+	| variable
 	| BREAK
 	| CONTINUE
     | RETURN
 	| SEMI_COLON
-	) SEMI_COLON?
+	) (COMMA | SEMI_COLON)?
 ;
 
 assignment
@@ -116,7 +117,7 @@ expression
 	| expression GREATER_THAN expression				
 	| expression GREATER_THAN_OR_EQUAL expression		
 	| expression EQUALS expression						
-	| expression NOT expression							
+	| expression NOT_EQUAL expression							
 	| expression BINARY_AND expression					
 	| expression BINARY_OR expression					
 	| expression LOGICAL_AND expression					
@@ -126,7 +127,7 @@ expression
 	| function_call										
 	| function_handle									
 	| rvalue											
-    | (INT | FLOAT | STRING | END | COLON)				
+    | (INT | FLOAT | IMAGINARY | STRING | END | COLON)			
 ;
 
 array:
@@ -138,7 +139,7 @@ cell:
 ;
 
 function_call
-	: function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
+	: (namespace DOT)? function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
 ;
 
 function_handle
@@ -148,7 +149,7 @@ function_handle
 
 rvalue
 	: rvalue DOT rvalue
-	| rvalue LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
+	| rvalue LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
 	| rvalue LEFT_BRACE expression_list RIGHT_BRACE
 	| variable
 	| NOT
@@ -159,6 +160,10 @@ expression_list:
 ;
 
 function_name:
+	ID
+;
+
+namespace:
 	ID
 ;
 
@@ -225,15 +230,15 @@ TRANSPOSE		: '\'';
 
 // Special Characters
 AT	: '@';
-COMMA: ',';
+COMMA: ',' {maybeString = true;};
 DOT	: '.';
-SEMI_COLON: ';';
-LEFT_BRACE	: '{';
-LEFT_PARENTHESIS: '(';
-LEFT_SQUARE_BRACKET: '[';
-RIGHT_BRACE	: '}';
-RIGHT_PARENTHESIS: ')';
-RIGHT_SQUARE_BRACKET: ']';
+SEMI_COLON: ';' {maybeString = true;};
+LEFT_BRACE	: '{' {maybeString = true;};
+LEFT_PARENTHESIS: '(' {maybeString = true;};
+LEFT_SQUARE_BRACKET: '[' {maybeString = true;};
+RIGHT_BRACE	: '}' {maybeString = false;};
+RIGHT_PARENTHESIS: ')' {maybeString = false;};
+RIGHT_SQUARE_BRACKET: ']' {maybeString = false;};
 SINGLE_QUOTE: '\'';
 
 // Comments
@@ -245,6 +250,11 @@ THREEDOTS: ('...' NL) -> skip;
 
 // identifiers, strings, numbers, whitespace
 ID: [a-zA-Z] [a-zA-Z0-9_]*;
+
+IMAGINARY
+	: INT 'i'
+	| FLOAT 'i'
+;
 
 INT: DIGIT+;
 
@@ -258,6 +268,6 @@ EXPONENT: ('e'|'E') ('+'|'-')? DIGIT+;
 fragment
 DIGIT: [0-9];
 
-STRING : '\'' ( ~('\'' | '\r' | '\n') )* '\'';
+STRING : {maybeString}? '\'' ( ~('\'' | '\r' | '\n') )* '\'';
 
-WS : [ \t] -> skip;
+WS : [ \t] {maybeString = true;} -> skip;
