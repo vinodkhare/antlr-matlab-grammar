@@ -94,39 +94,39 @@ while_statement:
 ;
 
 expression
-	: LEFT_PARENTHESIS expression RIGHT_PARENTHESIS		#Parenthesis
-	| expression ELMENT_WISE_TRANSPOSE					#ElementWiseTranspose
-	| expression ELMENT_WISE_POWER expression			#ElementWisePower	
-	| expression TRANSPOSE								#Transpose
-	| expression POWER expression						#Power
-	| UNARY_PLUS expression								#UnaryPlus
-	| UNARY_MINUS expression							#UnaryMinus
-	| NOT expression									#Negation
-	| expression ELMENT_WISE_TIMES expression			#ElementWiseMultiplication
-	| expression ELMENT_WISE_RIGHT_DIVIDE expression	#ElementWiseRightDivision
-	| expression ELMENT_WISE_LEFT_DIVIDE expression		#ElementWiseLeftDivision
-	| expression TIMES expression						#Multiplication
-	| expression RIGHT_DIVIDE expression				#RightDivision
-	| expression LEFT_DIVIDE expression					#LeftDivision
-	| expression PLUS expression						#Addition
-	| expression MINUS expression						#Subtraction
-	| expression COLON expression						#Range
-	| expression LESS_THAN expression					#LessThan
-	| expression LESS_THAN_OR_EQUAL expression			#LessThanOrEqual 
-	| expression GREATER_THAN expression				#GreaterThan
-	| expression GREATER_THAN_OR_EQUAL expression		#GreaterThanOrEqual
-	| expression EQUALS expression						#Equals
-	| expression NOT expression							#NotEqual
-	| expression BINARY_AND expression					#BinaryAnd
-	| expression BINARY_OR expression					#BinaryOr
-	| expression LOGICAL_AND expression					#LogicalAnd
-	| expression LOGICAL_OR expression					#LogicalOr
-	| array												#ArrayAtom
-	| cell												#CellAtom
-	| function_call										#FunctionCall	
-	| function_handle									#FunctionHandle
-	| rvalue											#RValueAtom
-    | (INT | FLOAT | STRING | END | COLON)				#Atom
+	: LEFT_PARENTHESIS expression RIGHT_PARENTHESIS		
+	| expression ELMENT_WISE_TRANSPOSE					
+	| expression ELMENT_WISE_POWER expression			
+	| expression TRANSPOSE								
+	| expression POWER expression						
+	| PLUS expression								
+	| MINUS expression							
+	| NOT expression									
+	| expression ELMENT_WISE_TIMES expression			
+	| expression ELMENT_WISE_RIGHT_DIVIDE expression	
+	| expression ELMENT_WISE_LEFT_DIVIDE expression		
+	| expression TIMES expression						
+	| expression RIGHT_DIVIDE expression				
+	| expression LEFT_DIVIDE expression					
+	| expression PLUS expression						
+	| expression MINUS expression						
+	| expression COLON expression						
+	| expression LESS_THAN expression					
+	| expression LESS_THAN_OR_EQUAL expression			
+	| expression GREATER_THAN expression				
+	| expression GREATER_THAN_OR_EQUAL expression		
+	| expression EQUALS expression						
+	| expression NOT expression							
+	| expression BINARY_AND expression					
+	| expression BINARY_OR expression					
+	| expression LOGICAL_AND expression					
+	| expression LOGICAL_OR expression		
+	| array			
+	| cell												
+	| function_call										
+	| function_handle									
+	| rvalue											
+    | (INT | FLOAT | STRING | END | COLON)				
 ;
 
 array:
@@ -222,8 +222,6 @@ POWER			: '^';
 RIGHT_DIVIDE	: '\\';
 TIMES			: '*';
 TRANSPOSE		: '\'';
-UNARY_MINUS		: '-';
-UNARY_PLUS		: '+';
 
 // Special Characters
 AT	: '@';
