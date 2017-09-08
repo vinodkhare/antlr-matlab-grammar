@@ -92,7 +92,7 @@ switch_statement:
 try_statement:
 	TRY
 		statement*
-	CATCH exception
+	CATCH exception?
 		statement*
 	END
 ;
