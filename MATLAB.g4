@@ -94,7 +94,7 @@ try_statement:
 ;
 
 while_statement:
-	WHILE expression
+	WHILE expression COMMA?
 		statement*
 	END
 ;
@@ -102,39 +102,39 @@ while_statement:
 // Things that can be assigned
 expression
 	: expression DOT expression
-	| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS		
-	| expression ELMENT_WISE_TRANSPOSE					
-	| expression ELMENT_WISE_POWER expression			
-	| expression TRANSPOSE								
-	| expression POWER expression						
-	| PLUS expression								
-	| MINUS expression							
-	| NOT expression									
-	| expression ELMENT_WISE_TIMES expression			
-	| expression ELMENT_WISE_RIGHT_DIVIDE expression	
-	| expression ELMENT_WISE_LEFT_DIVIDE expression		
-	| expression TIMES expression						
-	| expression RIGHT_DIVIDE expression				
-	| expression LEFT_DIVIDE expression					
-	| expression PLUS expression						
-	| expression MINUS expression						
-	| expression COLON expression						
-	| expression LESS_THAN expression					
-	| expression LESS_THAN_OR_EQUAL expression			
-	| expression GREATER_THAN expression				
-	| expression GREATER_THAN_OR_EQUAL expression		
-	| expression EQUALS expression						
-	| expression NOT_EQUAL expression							
-	| expression BINARY_AND expression					
-	| expression BINARY_OR expression					
-	| expression LOGICAL_AND expression					
-	| expression LOGICAL_OR expression		
-	| array			
-	| cell												
-	| function_call										
-	| function_handle								
-	| lvalue											
-    | (INT | FLOAT | IMAGINARY | STRING | END | COLON)	
+	| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+	| expression ELMENT_WISE_TRANSPOSE
+	| expression ELMENT_WISE_POWER expression
+	| expression TRANSPOSE
+	| expression POWER expression
+	| PLUS expression
+	| MINUS expression
+	| NOT expression
+	| expression ELMENT_WISE_TIMES expression
+	| expression ELMENT_WISE_RIGHT_DIVIDE expression
+	| expression ELMENT_WISE_LEFT_DIVIDE expression
+	| expression TIMES expression
+	| expression RIGHT_DIVIDE expression
+	| expression LEFT_DIVIDE expression
+	| expression PLUS expression
+	| expression MINUS expression
+	| expression COLON expression
+	| expression LESS_THAN expression
+	| expression LESS_THAN_OR_EQUAL expression
+	| expression GREATER_THAN expression
+	| expression GREATER_THAN_OR_EQUAL expression
+	| expression EQUALS expression
+	| expression NOT_EQUAL expression
+	| expression BINARY_AND expression
+	| expression BINARY_OR expression
+	| expression LOGICAL_AND expression
+	| expression LOGICAL_OR expression
+	| array
+	| cell
+	| function_call
+	| function_handle
+	| lvalue
+	| (INT | FLOAT | IMAGINARY | STRING | END | COLON)
 ;
 
 array:
@@ -197,23 +197,23 @@ NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
 ELLIPSIS: '...' -> skip;
 
 // Keywords
-BREAK	   	: 'break';
-CASE	   	: 'case';
-CATCH	   	: 'catch';
-CONTINUE   	: 'continue';
-ELSE	   	: 'else';
-ELSEIF	   	: 'elseif';
-END	   		: 'end';
-FOR	   		: 'for';
-FUNCTION   	: 'function';
-GLOBAL	   	: 'global';
-IF	   		: 'if';
-OTHERWISE  	: 'otherwise';
-PERSISTENT 	: 'persistent';
-RETURN	   	: 'return';
-SWITCH	   	: 'switch';
-TRY	   		: 'try';
-WHILE	   	: 'while';
+BREAK		: 'break';
+CASE		: 'case';
+CATCH		: 'catch';
+CONTINUE	: 'continue';
+ELSE		: 'else';
+ELSEIF		: 'elseif';
+END			: 'end';
+FOR			: 'for';
+FUNCTION	: 'function';
+GLOBAL		: 'global';
+IF			: 'if';
+OTHERWISE	: 'otherwise';
+PERSISTENT	: 'persistent';
+RETURN		: 'return';
+SWITCH		: 'switch';
+TRY			: 'try';
+WHILE		: 'while';
 
 // Two Character Operators
 ELMENT_WISE_LEFT_DIVIDE		: './';
