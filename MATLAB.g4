@@ -67,7 +67,7 @@ if_statement:
 ;
 
 for_statement:
-	FOR for_index ASSIGN expression
+	FOR for_index ASSIGN expression COMMA?
 		statement*
 	END
 ;
