@@ -8,7 +8,19 @@ grammar MATLAB;
 //// Parser Rules
 
 matlab_file:
-	(statement | function_definition)*
+	(class_definition | statement | function_definition)*
+;
+
+class_definition
+	: CLASSDEF class_name
+		PROPERTIES
+			property_name*
+		END
+
+		METHODS
+			function_definition*
+		END
+	(RETURN | END)?
 ;
 
 function_definition:
@@ -17,8 +29,9 @@ function_definition:
 	(RETURN | END)?
 ;
 
-rvalue_arguments:
-	LEFT_SQUARE_BRACKET (variable (COMMA? variable)*)? RIGHT_SQUARE_BRACKET
+rvalue_arguments
+	: LEFT_SQUARE_BRACKET (variable (COMMA? variable)*)? RIGHT_SQUARE_BRACKET
+	| variable
 ;
 
 lvalue_arguments:
@@ -168,6 +181,10 @@ expression_list:
 	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* SEMI_COLON?
 ;
 
+class_name
+	: ID
+;
+
 command_argument:
 	ID
 ;
@@ -182,6 +199,10 @@ function_name:
 
 namespace:
 	ID
+;
+
+property_name
+	: ID
 ;
 
 variable:
@@ -200,6 +221,7 @@ ELLIPSIS: '...' -> skip;
 BREAK		: 'break';
 CASE		: 'case';
 CATCH		: 'catch';
+CLASSDEF	: 'classdef';
 CONTINUE	: 'continue';
 ELSE		: 'else';
 ELSEIF		: 'elseif';
@@ -208,8 +230,10 @@ FOR			: 'for';
 FUNCTION	: 'function';
 GLOBAL		: 'global';
 IF			: 'if';
+METHODS		: 'methods';
 OTHERWISE	: 'otherwise';
 PERSISTENT	: 'persistent';
+PROPERTIES	: 'properties';
 RETURN		: 'return';
 SWITCH		: 'switch';
 TRY			: 'try';
