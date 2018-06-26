@@ -13,14 +13,13 @@
                 "org.antlr.v4.Tool",
                 "MATLAB.g4",
                 "-o",
-                ".antlr",
+                ".antlr"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
         },
-
         {
             "label": "build",
             "type": "shell",
@@ -38,7 +37,6 @@
                 "generate"
             ]
         },
-
         {
             "label": "run",
             "type": "shell",
@@ -59,7 +57,8 @@
                 "isDefault": true
             },
             "dependsOn": [
-                "generate"
+                "generate",
+                "build"
             ]
         }
     ]
