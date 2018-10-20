@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "java",
             "args": [
-                "-cp",
+                "-cp", 
                 ".antlr/antlr-4.7.1-complete.jar",
                 "org.antlr.v4.Tool",
                 "MATLAB.g4",
@@ -25,9 +25,9 @@
             "type": "shell",
             "command": "javac",
             "args": [
+                ".antlr/*.java",
                 "-cp",
-                ".antlr;.antlr/antlr-4.7.1-complete.jar",
-                ".antlr/*.java"
+                ".antlr/antlr-4.7.1-complete.jar",
             ],
             "group": {
                 "kind": "build",
