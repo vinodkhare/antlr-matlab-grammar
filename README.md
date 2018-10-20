@@ -12,7 +12,7 @@ Class support is not fully tested. Please open an issue if you face problems.
 
 ## Visual Studio Code Tasks
 
-This repository comes with Visual Studio Code tasks (located in the `.vscode` folder). These tasks will help you test and develop the grammar. To run the tasks, select Terminal -> Run Build Tasks from the application menu.
+This repository comes with Visual Studio Code tasks (located in the `.vscode` folder). These tasks will help you test and develop the grammar. To run the tasks, select *Terminal -> Run Build Task...* from the application menu.
 
 ## Antlr Notes
 

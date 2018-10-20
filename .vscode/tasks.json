@@ -38,6 +38,23 @@
             ]
         },
         {
+            "label": "package",
+            "type": "shell",
+            "command": "jar",
+            "args": [
+                "uf",
+                ".antlr/antlr-4.7.1-complete.jar",
+                ".antlr/*.class"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "build"
+            ]
+        },
+        {
             "label": "run",
             "type": "shell",
             "command": "java",
