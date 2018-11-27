@@ -23,8 +23,10 @@ class_definition:
 ;
 
 function_definition:
-	FUNCTION LEFT_SQUARE_BRACKET variable RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
-	statement*
+(	FUNCTION LEFT_SQUARE_BRACKET variable RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
+|	FUNCTION 					 variable 					   ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS	
+|	FUNCTION 									 					  function_name
+)	statement*
 	(END | RETURN)?
 ;
 
@@ -54,12 +56,21 @@ statement:
 ;
 
 assignment:
-	array_access ASSIGN function_call
+	array_access ASSIGN cell
+|	array_access ASSIGN function_call
 |	variable ASSIGN cell
 |	variable ASSIGN expression
 |	variable ASSIGN function_call
+|	variable ASSIGN member_access
+|	variable ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
 |	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN expression
 |	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_call
+;
+
+member_access:
+	variable DOT variable
+|	member_access DOT variable
+|	member_access DOT function_call
 ;
 
 lvalue_list:
@@ -159,10 +170,11 @@ array:
 
 cell:
 	LEFT_BRACE expression (COMMA expression)* RIGHT_BRACE
+|	LEFT_BRACE expression		 expression*  RIGHT_BRACE
 ;
 
 function_call:
-	function_name LEFT_PARENTHESIS expression (COMMA expression)* RIGHT_PARENTHESIS
+	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
 ;
 
 function_handle
