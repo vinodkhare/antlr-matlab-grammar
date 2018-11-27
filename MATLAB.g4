@@ -177,16 +177,14 @@ lvalue:
 ;
 
 array_access:
-	variable LEFT_PARENTHESIS range_list RIGHT_PARENTHESIS
-;
-
-range_list:
-	range (COMMA range)*
+	variable LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
 ;
 
 range:
-	expression
-|	COLON
+	COLON
+|	(expression | END)
+|	(expression | END) COLON (expression | END)
+|	(expression | END) COLON (expression | END) COLON (expression | END)
 ;
 
 expression_list:

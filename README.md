@@ -28,4 +28,11 @@ Since the output above is being generated on `stdout` but Java, we can't capture
    the numbers for you
 7. So this will be item 3.
 
-<img src="test.png" />
+## Ranges in MATLAB
+
+Ranges in MATLAB can be written in the following forms
+
+* `:` - a simple color indicates the 'all' range.
+* `end` - indicates the last element of the array.
+* `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to `[2.3000    3.3000    4.3000]`.
+* `A:S:B` - indicates a range with a user specified step.
