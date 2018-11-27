@@ -54,9 +54,10 @@ statement:
 	) (COMMA | SEMI_COLON)?
 ;
 
-assignment
-	: LEFT_SQUARE_BRACKET lvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
-	| lvalue ASSIGN expression
+assignment:
+	array_access ASSIGN function_call
+|	LEFT_SQUARE_BRACKET lvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
+|	lvalue ASSIGN expression
 ;
 
 lvalue_list:
