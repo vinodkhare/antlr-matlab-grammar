@@ -1,6 +1,4 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
@@ -9,7 +7,7 @@
             "command": "java",
             "args": [
                 "-cp",
-                ".antlr/antlr-4.7.1-complete.jar",
+                "../antlr4/tool/target/antlr4-4.7.2-SNAPSHOT-complete.jar",
                 "org.antlr.v4.Tool",
                 "MATLAB.g4",
                 "-o",
@@ -18,7 +16,8 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "build",
@@ -26,7 +25,7 @@
             "command": "javac",
             "args": [
                 "-cp",
-                ".antlr;.antlr/antlr-4.7.1-complete.jar",
+                ".antlr;../antlr4/tool/target/antlr4-4.7.2-SNAPSHOT-complete.jar",
                 ".antlr/*.java"
             ],
             "group": {
@@ -35,7 +34,8 @@
             },
             "dependsOn": [
                 "generate"
-            ]
+            ],
+            "problemMatcher": []
         },
         {
             "label": "run",
@@ -43,7 +43,7 @@
             "command": "java",
             "args": [
                 "-cp",
-                ".antlr;.antlr/antlr-4.7.1-complete.jar",
+                ".antlr;../antlr4/tool/target/antlr4-4.7.2-SNAPSHOT-complete.jar",
                 "org.antlr.v4.gui.TestRig",
                 "MATLAB",
                 "matlab_file",
@@ -59,7 +59,8 @@
             "dependsOn": [
                 "generate",
                 "build"
-            ]
+            ],
+            "problemMatcher": []
         }
     ]
 }
