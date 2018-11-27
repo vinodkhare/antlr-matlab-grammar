@@ -6,13 +6,12 @@ grammar MATLAB;
 }
 
 //// Parser Rules
-
 matlab_file:
 	(class_definition | statement | function_definition)*
 ;
 
-class_definition
-	: CLASSDEF class_name
+class_definition:
+	CLASSDEF class_name
 		PROPERTIES
 			property_name*
 		END
@@ -46,7 +45,6 @@ statement:
 	| switch_statement
 	| try_statement
 	| while_statement
-	| expression_list
 	| function_call
 	| variable
 	| BREAK
@@ -279,7 +277,6 @@ LEFT_SQUARE_BRACKET: '[' {maybeString = true;};
 RIGHT_BRACE	: '}' {maybeString = false;};
 RIGHT_PARENTHESIS: ')' {maybeString = false;};
 RIGHT_SQUARE_BRACKET: ']' {maybeString = false;};
-SINGLE_QUOTE: '\'';
 
 // Comments
 BLOCKCOMMENT: '%{' .*?  '%}' -> channel(HIDDEN);

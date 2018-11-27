@@ -18,3 +18,14 @@ We need to add ANTLR and generated CLASS files to the MATLAB Java static path. A
 ```
 
 Since the output above is being generated on `stdout` but Java, we can't capture it into a MATLAB variable. The workaround here is to use the MATLAB [`diary`](https://www.mathworks.com/help/matlab/ref/diary.html) function. This writes the command line output to a text file called `diary` in the current folder.
+
+- Use a minus sign for a bullet
++ Or plus sign
+* Or an asterisk
+
+1. Numbered lists are easy
+2. Markdown keeps track of
+   the numbers for you
+7. So this will be item 3.
+
+<img src="test.png" />
