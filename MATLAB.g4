@@ -166,13 +166,26 @@ function_handle
 ;
 
 // Things that can be assigned *to*.
-lvalue
-	: lvalue DOT lvalue
-	| lvalue DOT LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
-	| lvalue LEFT_PARENTHESIS expression_list RIGHT_PARENTHESIS
-	| lvalue LEFT_BRACE expression_list RIGHT_BRACE
-	| variable
-	| NOT
+lvalue:
+	array_access
+|	lvalue DOT lvalue
+|	lvalue DOT LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+|	lvalue LEFT_BRACE expression_list RIGHT_BRACE
+|	variable
+|	NOT
+;
+
+array_access:
+	variable LEFT_PARENTHESIS range_list RIGHT_PARENTHESIS
+;
+
+range_list:
+	range (COMMA range)*
+;
+
+range:
+	expression
+|	COLON
 ;
 
 expression_list:
