@@ -1,7 +1,9 @@
 # MatlabAntlrGrammar
+
 An ANTLR4 grammar for MATLAB
 
 ## Antlr Notes
+
 * `*` matches zero or more repetitions
 * `+` matches one or more repetitions
 * `?` matches zero or one

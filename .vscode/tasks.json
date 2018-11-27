@@ -24,6 +24,7 @@
             "type": "shell",
             "command": "javac",
             "args": [
+                ".antlr/*.java",
                 "-cp",
                 ".antlr;../antlr4/tool/target/antlr4-4.7.2-SNAPSHOT-complete.jar",
                 ".antlr/*.java"
@@ -36,6 +37,23 @@
                 "generate"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "package",
+            "type": "shell",
+            "command": "jar",
+            "args": [
+                "uf",
+                ".antlr/antlr-4.7.1-complete.jar",
+                ".antlr/*.class"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "build"
+            ]
         },
         {
             "label": "run",
