@@ -23,9 +23,9 @@ class_definition:
 ;
 
 function_definition:
-	FUNCTION (rvalue_arguments ASSIGN)? function_name lvalue_arguments?
-		statement*
-	(RETURN | END)?
+	FUNCTION LEFT_SQUARE_BRACKET variable RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
+	statement*
+	(END | RETURN)?
 ;
 
 rvalue_arguments
@@ -50,14 +50,16 @@ statement:
 	| BREAK
 	| CONTINUE
     | RETURN
-	| SEMI_COLON
 	) (COMMA | SEMI_COLON)?
 ;
 
 assignment:
 	array_access ASSIGN function_call
-|	LEFT_SQUARE_BRACKET lvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
 |	variable ASSIGN cell
+|	variable ASSIGN expression
+|	variable ASSIGN function_call
+|	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN expression
+|	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_call
 ;
 
 lvalue_list:
@@ -151,7 +153,8 @@ expression
 ;
 
 array:
-	LEFT_SQUARE_BRACKET expression_list? RIGHT_SQUARE_BRACKET
+	LEFT_SQUARE_BRACKET expression (COMMA expression)* RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET expression expression* RIGHT_SQUARE_BRACKET
 ;
 
 cell:
@@ -181,6 +184,15 @@ array_access:
 	variable LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
 ;
 
+// ## Ranges in MATLAB
+//
+// Ranges in MATLAB can be written in the following forms
+//
+// * `:` - a simple color indicates the 'all' range.
+// * `end` - indicates the last element of the array.
+// * `A` - a single expression `A`
+// * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to `[2.3000    3.3000    4.3000]`.
+// * `A:S:B` - indicates a range with a user specified step.
 range:
 	COLON
 |	(expression | END)
