@@ -34,5 +34,6 @@ Ranges in MATLAB can be written in the following forms
 
 * `:` - a simple color indicates the 'all' range.
 * `end` - indicates the last element of the array.
+* `A` - a single expression `A`
 * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to `[2.3000    3.3000    4.3000]`.
 * `A:S:B` - indicates a range with a user specified step.

@@ -57,7 +57,7 @@ statement:
 assignment:
 	array_access ASSIGN function_call
 |	LEFT_SQUARE_BRACKET lvalue_list RIGHT_SQUARE_BRACKET ASSIGN expression
-|	lvalue ASSIGN expression
+|	variable ASSIGN cell
 ;
 
 lvalue_list:
@@ -142,6 +142,7 @@ expression
 	| expression LOGICAL_AND expression
 	| expression LOGICAL_OR expression
 	| array
+|	array_access
 	| cell
 	| function_call
 	| function_handle
@@ -154,11 +155,11 @@ array:
 ;
 
 cell:
-	LEFT_BRACE expression_list? RIGHT_BRACE
+	LEFT_BRACE expression (COMMA expression)* RIGHT_BRACE
 ;
 
 function_call:
-	function_name LEFT_PARENTHESIS expression_list? RIGHT_PARENTHESIS
+	function_name LEFT_PARENTHESIS expression (COMMA expression)* RIGHT_PARENTHESIS
 ;
 
 function_handle
