@@ -58,6 +58,7 @@ statement:
 assignment:
 	array_access ASSIGN cell
 |	array_access ASSIGN function_call
+|	array_access ASSIGN variable
 |	property_access ASSIGN array_access
 |	property_access ASSIGN variable
 |	variable ASSIGN cell
@@ -168,6 +169,7 @@ expression
 array:
 	LEFT_SQUARE_BRACKET expression (COMMA expression)* RIGHT_SQUARE_BRACKET
 |	LEFT_SQUARE_BRACKET expression 		  expression*  RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET (expression expression*) (SEMI_COLON (expression expression*))* RIGHT_SQUARE_BRACKET
 ;
 
 cell:
