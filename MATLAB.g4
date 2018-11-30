@@ -23,7 +23,7 @@ class_definition:
 ;
 
 function_definition:
-(	FUNCTION LEFT_SQUARE_BRACKET variable RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
+(	FUNCTION LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
 |	FUNCTION 					 variable 					   ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS	
 |	FUNCTION 									 					  function_name
 )	statement*
@@ -39,26 +39,34 @@ lvalue_arguments:
 	LEFT_PARENTHESIS ((variable | NOT) (COMMA? (variable | NOT))*)? RIGHT_PARENTHESIS
 ;
 
-statement:
-	( assignment
-	| command
-	| if_statement
-	| for_statement
-	| switch_statement
-	| try_statement
-	| while_statement
-	| function_call
-	| variable
-	| BREAK
-	| CONTINUE
-    | RETURN
-	) (COMMA | SEMI_COLON)?
+statement
+:	
+(	assignment
+|	command
+|	if_statement
+|	for_statement
+|	switch_statement
+|	try_statement
+|	while_statement
+|	function_call
+|	property_access
+| 	variable
+| 	BREAK
+| 	CONTINUE
+| 	RETURN	
+)
+(	COMMA | SEMI_COLON	)?
 ;
 
-assignment:
-	array_access ASSIGN cell
+assignment
+:	array_access ASSIGN cell
+|	array_access ASSIGN expression
 |	array_access ASSIGN function_call
 |	array_access ASSIGN variable
+|	cell_access ASSIGN cell
+|	cell_access ASSIGN expression
+|	cell_access ASSIGN function_call
+|	cell_access ASSIGN variable
 |	property_access ASSIGN array_access
 |	property_access ASSIGN variable
 |	variable ASSIGN cell
@@ -66,8 +74,8 @@ assignment:
 |	variable ASSIGN function_call
 |	variable ASSIGN property_access
 |	variable ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN expression
-|	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_call
+|	LEFT_SQUARE_BRACKET (array_access | variable | NOT) (COMMA (array_access | variable | NOT))* RIGHT_SQUARE_BRACKET ASSIGN expression
+|	LEFT_SQUARE_BRACKET (array_access | variable | NOT) (COMMA (array_access | variable | NOT))* RIGHT_SQUARE_BRACKET ASSIGN function_call
 ;
 
 property_access:
@@ -158,7 +166,7 @@ expression
 	| expression LOGICAL_AND expression
 	| expression LOGICAL_OR expression
 	| array
-|	array_access
+	| array_access
 	| cell
 	| function_call
 	| function_handle
@@ -166,15 +174,23 @@ expression
 	| (INT | FLOAT | IMAGINARY | STRING | END | COLON)
 ;
 
-array:
-	LEFT_SQUARE_BRACKET expression (COMMA expression)* RIGHT_SQUARE_BRACKET
+array
+:	LEFT_SQUARE_BRACKET expression (COMMA expression)* RIGHT_SQUARE_BRACKET
 |	LEFT_SQUARE_BRACKET expression 		  expression*  RIGHT_SQUARE_BRACKET
 |	LEFT_SQUARE_BRACKET (expression expression*) (SEMI_COLON (expression expression*))* RIGHT_SQUARE_BRACKET
+;
+
+array_access
+:	variable LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
 ;
 
 cell:
 	LEFT_BRACE expression (COMMA expression)* RIGHT_BRACE
 |	LEFT_BRACE expression		 expression*  RIGHT_BRACE
+;
+
+cell_access
+:	variable LEFT_BRACE range (COMMA range)* RIGHT_BRACE
 ;
 
 function_call:
@@ -197,9 +213,7 @@ lvalue:
 |	NOT
 ;
 
-array_access:
-	variable LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
-;
+
 
 // ## Ranges in MATLAB
 //
