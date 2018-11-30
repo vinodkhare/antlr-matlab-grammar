@@ -58,19 +58,21 @@ statement:
 assignment:
 	array_access ASSIGN cell
 |	array_access ASSIGN function_call
+|	property_access ASSIGN array_access
+|	property_access ASSIGN variable
 |	variable ASSIGN cell
 |	variable ASSIGN expression
 |	variable ASSIGN function_call
-|	variable ASSIGN member_access
+|	variable ASSIGN property_access
 |	variable ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
 |	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN expression
 |	LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_call
 ;
 
-member_access:
-	variable DOT variable
-|	member_access DOT variable
-|	member_access DOT function_call
+property_access:
+	array_access DOT variable
+|	variable DOT variable
+|	property_access DOT variable
 ;
 
 lvalue_list:
@@ -165,7 +167,7 @@ expression
 
 array:
 	LEFT_SQUARE_BRACKET expression (COMMA expression)* RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET expression expression* RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET expression 		  expression*  RIGHT_SQUARE_BRACKET
 ;
 
 cell:
@@ -175,6 +177,7 @@ cell:
 
 function_call:
 	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
+|	property_access DOT function_call
 ;
 
 function_handle
