@@ -11,10 +11,10 @@ matlab_file:
 ;
 
 class_definition:
-	CLASSDEF class_name
-		PROPERTIES
+	CLASSDEF class_name LESS_THAN super_class_name (BINARY_AND super_class_name)*
+	(	PROPERTIES LEFT_PARENTHESIS property_attribute (ASSIGN property_attribute_value)? (COMMA property_attribute (ASSIGN property_attribute_value)?)* RIGHT_PARENTHESIS
 			property_name*
-		END
+		END		)*
 
 		METHODS
 			function_definition*
@@ -22,12 +22,42 @@ class_definition:
 	(RETURN | END)?
 ;
 
-function_definition:
-(	FUNCTION LEFT_SQUARE_BRACKET identifier (COMMA identifier)* RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS identifier (COMMA identifier)* RIGHT_PARENTHESIS
-|	FUNCTION 					 identifier 					   ASSIGN function_name LEFT_PARENTHESIS identifier (COMMA identifier)* RIGHT_PARENTHESIS	
-|	FUNCTION 									 					  function_name
-)	statement*
+property_attribute
+:	'AbortSet'
+|	'Abstract'
+|	'Access'
+|	'Constant'
+|	'Dependent'
+|	'GetAccess'
+|	'GetObservable'
+|	'Hidden'
+|	'NonCopyable'
+|	'SetAccess'
+|	'SetObservable'
+|	'Transient'
+;
+
+property_attribute_value
+:	bool
+|	property_access_type
+;
+
+property_access_type
+:	'private'
+|	'public'
+|	'protected'
+|	'immutable'
+;
+
+function_definition
+:	'function' (function_returns ASSIGN)? function_name LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS?
+		statement*
 	(END | RETURN)?
+;
+
+function_returns
+:	identifier
+|	LEFT_SQUARE_BRACKET identifier (COMMA identifier)* RIGHT_SQUARE_BRACKET
 ;
 
 rvalue_arguments
@@ -164,8 +194,11 @@ expression
 |	expression LOGICAL_OR expression
 |	array
 |	array_access
+|	bool
 |	cell
 |	cell_access
+|	empty_array
+|	empty_cell
 |	function_call
 |	function_handle
 |	property_access
@@ -198,6 +231,7 @@ cell_access
 
 function_call:
 	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
+|	identifier DOT function_call
 |	property_access DOT function_call
 ;
 
@@ -257,6 +291,10 @@ class_name
 :	ID
 ;
 
+super_class_name
+:	ID
+;
+
 command_argument:
 	ID
 ;
@@ -277,8 +315,17 @@ property_name
 :	ID
 ;
 
-empty
+bool
+:	'true'
+|	'false'
+;
+
+empty_array
 :	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
+;
+
+empty_cell
+:	LEFT_BRACE RIGHT_BRACE
 ;
 
 identifier
