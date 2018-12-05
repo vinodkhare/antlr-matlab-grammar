@@ -58,12 +58,6 @@ statement
 (	COMMA | SEMI_COLON	)?
 ;
 
-property_access:
-	array_access DOT variable
-|	variable DOT variable
-|	property_access DOT variable
-;
-
 lvalue_list:
 	lvalue (COMMA? lvalue)*
 ;
@@ -117,7 +111,7 @@ while_statement:
 
 // MATLAB does allow for return values to be specified without a COMMA, e.g. [h w] = size(X); 
 // However, it does give a warning saying this is not recommended. Thus we don't parse this kind
-// of function call.
+// of assignment.
 assignment
 :	array_access ASSIGN cell
 |	array_access ASSIGN expression
@@ -139,7 +133,6 @@ assignment
 |	LEFT_SQUARE_BRACKET (array_access | variable | NOT) (COMMA (array_access | variable | NOT))* RIGHT_SQUARE_BRACKET ASSIGN function_call
 ;
 
-// Things that can be assigned
 expression
 :	expression DOT expression
 |	LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
@@ -172,8 +165,10 @@ expression
 |	array
 |	array_access
 |	cell
+|	cell_access
 |	function_call
 |	function_handle
+|	property_access
 |	lvalue
 |	(INT | FLOAT | IMAGINARY | STRING | END | COLON)
 ;
@@ -211,6 +206,12 @@ function_handle
 	| AT lvalue_arguments statement
 ;
 
+property_access:
+	array_access DOT variable
+|	variable DOT variable
+|	property_access DOT variable
+;
+
 // Things that can be assigned *to*.
 lvalue:
 	array_access
@@ -221,8 +222,6 @@ lvalue:
 |	NOT
 ;
 
-
-
 // ## Ranges in MATLAB
 //
 // Ranges in MATLAB can be written in the following forms
@@ -230,7 +229,9 @@ lvalue:
 // * `:` - a simple color indicates the 'all' range.
 // * `end` - indicates the last element of the array.
 // * `A` - a single expression `A`
-// * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to `[2.3000    3.3000    4.3000]`.
+// * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including
+// `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to
+// `[2.3000    3.3000    4.3000]`. 
 // * `A:S:B` - indicates a range with a user specified step.
 range:
 	COLON
@@ -264,11 +265,11 @@ namespace:
 ;
 
 property_name
-	: ID
+:	ID
 ;
 
-variable:
-	ID
+variable
+:	ID
 ;
 
 //// LEXER RULES
