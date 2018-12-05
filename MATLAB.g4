@@ -50,7 +50,7 @@ property_access_type
 ;
 
 function_definition
-:	'function' (function_returns ASSIGN)? function_name LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS?
+:	FUNCTION (function_returns ASSIGN)? function_name (LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS)?
 		statement*
 	(END | RETURN)?
 ;
@@ -143,24 +143,18 @@ while_statement:
 // However, it does give a warning saying this is not recommended. Thus we don't parse this kind
 // of assignment.
 assignment
-:	array_access ASSIGN cell
-|	array_access ASSIGN expression
-|	array_access ASSIGN function_call
-|	array_access ASSIGN identifier
-|	cell_access ASSIGN cell
-|	cell_access ASSIGN expression
-|	cell_access ASSIGN function_call
-|	cell_access ASSIGN identifier
-|	property_access ASSIGN array_access
-|	property_access ASSIGN identifier
-|	identifier ASSIGN array
-|	identifier ASSIGN cell
-|	identifier ASSIGN expression
-|	identifier ASSIGN function_call
-|	identifier ASSIGN property_access
-|	identifier ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET (array_access | identifier | NOT) (COMMA (array_access | identifier | NOT))* RIGHT_SQUARE_BRACKET ASSIGN expression
-|	LEFT_SQUARE_BRACKET (array_access | identifier | NOT) (COMMA (array_access | identifier | NOT))* RIGHT_SQUARE_BRACKET ASSIGN function_call
+:	lvalue ASSIGN 
+		(array | array_access | cell | cell_access | expression | function_call | identifier | property_access)
+|	LEFT_SQUARE_BRACKET (lvalue | NOT) (COMMA (lvalue | NOT))* RIGHT_SQUARE_BRACKET ASSIGN
+		(array | array_access | cell | cell_access | expression | function_call | identifier | property_access)
+;
+
+// Things that can be assigned *to*.
+lvalue
+:	array_access
+|	cell_access
+|	identifier
+|	property_access
 ;
 
 expression
@@ -240,21 +234,22 @@ function_handle
 	| AT lvalue_arguments statement
 ;
 
+literal
+:	INT
+|	FLOAT
+|	IMAGINARY
+|	STRING
+|	bool
+|	empty_array
+;
+
 property_access:
 	array_access DOT identifier
 |	identifier DOT identifier
 |	property_access DOT identifier
 ;
 
-// Things that can be assigned *to*.
-lvalue:
-	array_access
-|	lvalue DOT lvalue
-|	lvalue DOT LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
-|	lvalue LEFT_BRACE expression_list RIGHT_BRACE
-|	identifier
-|	NOT
-;
+
 
 // ## Ranges in MATLAB
 //
