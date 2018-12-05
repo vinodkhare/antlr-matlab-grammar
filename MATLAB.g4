@@ -23,20 +23,20 @@ class_definition:
 ;
 
 function_definition:
-(	FUNCTION LEFT_SQUARE_BRACKET variable (COMMA variable)* RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS
-|	FUNCTION 					 variable 					   ASSIGN function_name LEFT_PARENTHESIS variable (COMMA variable)* RIGHT_PARENTHESIS	
+(	FUNCTION LEFT_SQUARE_BRACKET identifier (COMMA identifier)* RIGHT_SQUARE_BRACKET ASSIGN function_name LEFT_PARENTHESIS identifier (COMMA identifier)* RIGHT_PARENTHESIS
+|	FUNCTION 					 identifier 					   ASSIGN function_name LEFT_PARENTHESIS identifier (COMMA identifier)* RIGHT_PARENTHESIS	
 |	FUNCTION 									 					  function_name
 )	statement*
 	(END | RETURN)?
 ;
 
 rvalue_arguments
-	: LEFT_SQUARE_BRACKET (variable (COMMA? variable)*)? RIGHT_SQUARE_BRACKET
-	| variable
+	: LEFT_SQUARE_BRACKET (identifier (COMMA? identifier)*)? RIGHT_SQUARE_BRACKET
+	| identifier
 ;
 
 lvalue_arguments:
-	LEFT_PARENTHESIS ((variable | NOT) (COMMA? (variable | NOT))*)? RIGHT_PARENTHESIS
+	LEFT_PARENTHESIS ((identifier | NOT) (COMMA? (identifier | NOT))*)? RIGHT_PARENTHESIS
 ;
 
 statement
@@ -50,7 +50,7 @@ statement
 |	while_statement
 |	function_call
 |	property_access
-| 	variable
+| 	identifier
 | 	BREAK
 | 	CONTINUE
 | 	RETURN	
@@ -116,21 +116,21 @@ assignment
 :	array_access ASSIGN cell
 |	array_access ASSIGN expression
 |	array_access ASSIGN function_call
-|	array_access ASSIGN variable
+|	array_access ASSIGN identifier
 |	cell_access ASSIGN cell
 |	cell_access ASSIGN expression
 |	cell_access ASSIGN function_call
-|	cell_access ASSIGN variable
+|	cell_access ASSIGN identifier
 |	property_access ASSIGN array_access
-|	property_access ASSIGN variable
-|	variable ASSIGN array
-|	variable ASSIGN cell
-|	variable ASSIGN expression
-|	variable ASSIGN function_call
-|	variable ASSIGN property_access
-|	variable ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET (array_access | variable | NOT) (COMMA (array_access | variable | NOT))* RIGHT_SQUARE_BRACKET ASSIGN expression
-|	LEFT_SQUARE_BRACKET (array_access | variable | NOT) (COMMA (array_access | variable | NOT))* RIGHT_SQUARE_BRACKET ASSIGN function_call
+|	property_access ASSIGN identifier
+|	identifier ASSIGN array
+|	identifier ASSIGN cell
+|	identifier ASSIGN expression
+|	identifier ASSIGN function_call
+|	identifier ASSIGN property_access
+|	identifier ASSIGN LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET (array_access | identifier | NOT) (COMMA (array_access | identifier | NOT))* RIGHT_SQUARE_BRACKET ASSIGN expression
+|	LEFT_SQUARE_BRACKET (array_access | identifier | NOT) (COMMA (array_access | identifier | NOT))* RIGHT_SQUARE_BRACKET ASSIGN function_call
 ;
 
 expression
@@ -170,7 +170,7 @@ expression
 |	function_handle
 |	property_access
 |	lvalue
-|	(INT | FLOAT | IMAGINARY | STRING | END | COLON)
+|	(INT | FLOAT | IMAGINARY | STRING | END)
 ;
 
 // Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
@@ -184,7 +184,7 @@ array
 ;
 
 array_access
-:	(cell_access | variable) LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
+:	(cell_access | identifier) LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
 ;
 
 cell
@@ -193,7 +193,7 @@ cell
 ;
 
 cell_access
-:	variable LEFT_BRACE range (COMMA range)* RIGHT_BRACE
+:	identifier LEFT_BRACE range (COMMA range)* RIGHT_BRACE
 ;
 
 function_call:
@@ -207,9 +207,9 @@ function_handle
 ;
 
 property_access:
-	array_access DOT variable
-|	variable DOT variable
-|	property_access DOT variable
+	array_access DOT identifier
+|	identifier DOT identifier
+|	property_access DOT identifier
 ;
 
 // Things that can be assigned *to*.
@@ -218,7 +218,7 @@ lvalue:
 |	lvalue DOT lvalue
 |	lvalue DOT LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
 |	lvalue LEFT_BRACE expression_list RIGHT_BRACE
-|	variable
+|	identifier
 |	NOT
 ;
 
@@ -233,8 +233,17 @@ lvalue:
 // `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to
 // `[2.3000    3.3000    4.3000]`. 
 // * `A:S:B` - indicates a range with a user specified step.
-range:
-	COLON
+//
+// There is an additional complication here. The special keyword `end` can be used in any range
+// expression but does not have a meaning outside of array or cell access. E.g. if `a = randn(100, 1)`,
+// then `a(end / 10)` is a valid expression. But the expression end / 10 itself outside of array
+// or cell access doesn't have a meaning. Thus, we need two kinds of expressions - those that can
+// be used in array/cell access that those that can be independent.
+//
+// This means that the `expression` parser rule must be duplicated with the addition of `end`.
+// However, the fact that `end` is always a positive scalar int can help prune the rule definition.
+range
+:	COLON
 |	(expression | END)
 |	(expression | END) COLON (expression | END)
 |	(expression | END) COLON (expression | END) COLON (expression | END)
@@ -245,7 +254,7 @@ expression_list:
 ;
 
 class_name
-	: ID
+:	ID
 ;
 
 command_argument:
@@ -268,7 +277,11 @@ property_name
 :	ID
 ;
 
-variable
+empty
+:	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
+;
+
+identifier
 :	ID
 ;
 
