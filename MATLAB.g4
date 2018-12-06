@@ -107,7 +107,7 @@ if_statement
 	(ELSE
 		statement*)?
 	END)
-|	IF expression SEMI_COLON statement SEMI_COLON END
+|	IF expression (COMMA | SEMI_COLON) statement (COMMA | SEMI_COLON) END
 ;
 
 for_statement:
