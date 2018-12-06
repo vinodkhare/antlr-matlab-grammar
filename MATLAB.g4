@@ -98,14 +98,16 @@ command:
 	function_name command_argument+
 ;
 
-if_statement:
-	IF expression COMMA?
+// if_statement can be multiline or single line
+if_statement
+:	(IF expression COMMA?
 		statement*
 	(ELSEIF expression COMMA?
 		statement*)*
 	(ELSE
 		statement*)?
-	END
+	END)
+|	IF expression SEMI_COLON statement SEMI_COLON END
 ;
 
 for_statement:
@@ -276,8 +278,6 @@ range
 expression_list:
 	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* SEMI_COLON?
 ;
-
-
 
 command_argument:
 	ID
