@@ -12,13 +12,13 @@ matlab_file:
 
 class_definition:
 	CLASSDEF class_name LESS_THAN super_class_name (BINARY_AND super_class_name)*
-	(	PROPERTIES LEFT_PARENTHESIS property_attribute (ASSIGN property_attribute_value)? (COMMA property_attribute (ASSIGN property_attribute_value)?)* RIGHT_PARENTHESIS
+	(	(PROPERTIES LEFT_PARENTHESIS property_attribute (ASSIGN property_attribute_value)? (COMMA property_attribute (ASSIGN property_attribute_value)?)* RIGHT_PARENTHESIS)?
 			property_name*
 		END		)*
 
-		METHODS
+	(	METHODS (LEFT_PARENTHESIS method_attribute (ASSIGN method_attribute_value)? (COMMA method_attribute (ASSIGN method_attribute_value)?)* RIGHT_PARENTHESIS)?
 			function_definition*
-		END
+		END		)*
 	(RETURN | END)?
 ;
 
@@ -28,6 +28,19 @@ class_name
 
 super_class_name
 :	ID
+;
+
+method_attribute
+:	'Abstract'
+|	'Access'
+|	'Hidden'
+|	'Sealed'
+|	'Static'
+;
+
+method_attribute_value
+:	bool
+|	property_access_type
 ;
 
 property_attribute
@@ -199,9 +212,9 @@ expression
 |	empty_cell
 |	function_call
 |	function_handle_definition
+|	identifier
+|	literal
 |	property_access
-|	lvalue
-|	(INT | FLOAT | IMAGINARY | STRING | END)
 ;
 
 // Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
@@ -376,23 +389,23 @@ TIMES			: '*';
 TRANSPOSE		: '\'';
 
 // Special Characters
-AT	: '@';
-COMMA: ',' {maybeString = true;};
-DOT	: '.';
-SEMI_COLON: ';' {maybeString = true;};
-LEFT_BRACE	: '{' {maybeString = true;};
-LEFT_PARENTHESIS: '(' {maybeString = true;};
-LEFT_SQUARE_BRACKET: '[' {maybeString = true;};
-RIGHT_BRACE	: '}' {maybeString = false;};
-RIGHT_PARENTHESIS: ')' {maybeString = false;};
-RIGHT_SQUARE_BRACKET: ']' {maybeString = false;};
+AT						: '@';
+COMMA					: ',' {maybeString = true;};
+DOT						: '.';
+SEMI_COLON				: ';' {maybeString = true;};
+LEFT_BRACE				: '{' {maybeString = true;};
+LEFT_PARENTHESIS		: '(' {maybeString = true;};
+LEFT_SQUARE_BRACKET		: '[' {maybeString = true;};
+RIGHT_BRACE				: '}' {maybeString = false;};
+RIGHT_PARENTHESIS		: ')' {maybeString = false;};
+RIGHT_SQUARE_BRACKET	: ']' {maybeString = false;};
 
 // Comments
-BLOCKCOMMENT: '%{' .*?  '%}' -> channel(HIDDEN);
+BLOCKCOMMENT	: '%{' .*?  '%}' -> channel(HIDDEN);
 
-COMMENT: '%' .*? NL  -> channel(HIDDEN);
+COMMENT			: '%' .*? NL  -> channel(HIDDEN);
 
-THREEDOTS: ('...' NL) -> skip;
+THREEDOTS		: ('...' NL) -> skip;
 
 // identifiers, strings, numbers, whitespace
 ID: [a-zA-Z] [a-zA-Z0-9_]* {maybeString = false;};
