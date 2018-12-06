@@ -22,6 +22,14 @@ class_definition:
 	(RETURN | END)?
 ;
 
+class_name
+:	ID
+;
+
+super_class_name
+:	ID
+;
+
 property_attribute
 :	'AbortSet'
 |	'Abstract'
@@ -50,9 +58,18 @@ property_access_type
 ;
 
 function_definition
-:	FUNCTION (function_returns ASSIGN)? function_name (LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS)?
+:	FUNCTION (function_returns ASSIGN)? function_name function_params?
 		statement*
 	(END | RETURN)?
+;
+
+function_handle_definition
+:	AT function_name
+|	AT function_params statement
+;
+
+function_params
+:	LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS
 ;
 
 function_returns
@@ -60,36 +77,21 @@ function_returns
 |	LEFT_SQUARE_BRACKET identifier (COMMA identifier)* RIGHT_SQUARE_BRACKET
 ;
 
-rvalue_arguments
-	: LEFT_SQUARE_BRACKET (identifier (COMMA? identifier)*)? RIGHT_SQUARE_BRACKET
-	| identifier
-;
-
-lvalue_arguments:
-	LEFT_PARENTHESIS ((identifier | NOT) (COMMA? (identifier | NOT))*)? RIGHT_PARENTHESIS
-;
-
 statement
-:	
-(	assignment
-|	command
-|	if_statement
-|	for_statement
-|	switch_statement
-|	try_statement
-|	while_statement
-|	function_call
-|	property_access
-| 	identifier
-| 	BREAK
-| 	CONTINUE
-| 	RETURN	
-)
+:	(	assignment
+	|	command
+	|	if_statement
+	|	for_statement
+	|	switch_statement
+	|	try_statement
+	|	while_statement
+	|	function_call
+	|	property_access
+	| 	identifier
+	| 	BREAK
+	| 	CONTINUE
+	| 	RETURN	)
 (	COMMA | SEMI_COLON	)?
-;
-
-lvalue_list:
-	lvalue (COMMA? lvalue)*
 ;
 
 command:
@@ -194,7 +196,7 @@ expression
 |	empty_array
 |	empty_cell
 |	function_call
-|	function_handle
+|	function_handle_definition
 |	property_access
 |	lvalue
 |	(INT | FLOAT | IMAGINARY | STRING | END)
@@ -229,11 +231,6 @@ function_call:
 |	property_access DOT function_call
 ;
 
-function_handle
-	: AT function_name
-	| AT lvalue_arguments statement
-;
-
 literal
 :	INT
 |	FLOAT
@@ -248,8 +245,6 @@ property_access:
 |	identifier DOT identifier
 |	property_access DOT identifier
 ;
-
-
 
 // ## Ranges in MATLAB
 //
@@ -282,13 +277,7 @@ expression_list:
 	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* SEMI_COLON?
 ;
 
-class_name
-:	ID
-;
 
-super_class_name
-:	ID
-;
 
 command_argument:
 	ID
