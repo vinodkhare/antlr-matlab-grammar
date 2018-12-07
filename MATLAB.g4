@@ -6,29 +6,110 @@ grammar MATLAB;
 }
 
 //// Parser Rules
-matlab_file:
-	(class_definition | statement | function_definition)*
+matlab_file
+:	(def_class | statement | def_function)*
 ;
 
-class_definition:
-	CLASSDEF class_name LESS_THAN super_class_name (BINARY_AND super_class_name)*
+// # Definitions
+// 
+// Definitions are MATLAB language constructs that only 'define' something. A definition when
+// evaluated does not result in a value. A definition is a template only.
+
+// Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
+// [0 0 8]	[[0 0 8] [9 0 8]]	[[0 0 8],[9 0 8]]	[[0 0, 8],[9 0 8]] and
+// [0 8 9, 10, 40 50 60] are all valid matlab expressions.
+// The caveat is that you can't have two simultaneous commas. That throws an error. 
+// E.g. [0,,1] is not allowed.
+def_array
+:	LEFT_SQUARE_BRACKET expression (COMMA? expression)* RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_SQUARE_BRACKET
+;
+
+def_cell
+:	LEFT_BRACE expression (COMMA? expression)* RIGHT_BRACE
+|	LEFT_BRACE expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_BRACE
+;
+
+def_class:
+	CLASSDEF id_class LESS_THAN id_super (BINARY_AND id_super)*
 	(	(PROPERTIES LEFT_PARENTHESIS property_attribute (ASSIGN property_attribute_value)? (COMMA property_attribute (ASSIGN property_attribute_value)?)* RIGHT_PARENTHESIS)?
-			property_name*
+			id_property*
 		END		)*
 
 	(	METHODS (LEFT_PARENTHESIS method_attribute (ASSIGN method_attribute_value)? (COMMA method_attribute (ASSIGN method_attribute_value)?)* RIGHT_PARENTHESIS)?
-			function_definition*
+			def_function*
 		END		)*
 	(RETURN | END)?
 ;
 
-class_name
-:	ID
+def_function
+:	FUNCTION (function_returns ASSIGN)? id_function function_params?
+		statement*
+	(END | RETURN)?
 ;
 
-super_class_name
-:	ID
+def_handle
+:	AT id_function
+|	AT function_params statement
 ;
+
+// # Statements
+
+// MATLAB does allow for return values to be specified without a COMMA, e.g. [h w] = size(X); 
+// However, it does give a warning saying this is not recommended. Thus we don't parse this kind
+// of assignment.
+st_assign
+:	lvalue ASSIGN 
+		(def_array | xpr_array | def_cell | xpr_cell | expression | xpr_function | id_var | xpr_field)
+|	LEFT_SQUARE_BRACKET (lvalue | NOT) (COMMA (lvalue | NOT))* RIGHT_SQUARE_BRACKET ASSIGN
+		(def_array | xpr_array | def_cell | xpr_cell | expression | xpr_function | id_var | xpr_field)
+;
+
+st_command:
+	id_function command_argument+
+;
+
+// if_statement can be multiline or single line
+st_if
+:	(IF expression COMMA?
+		statement*
+	(ELSEIF expression COMMA?
+		statement*)*
+	(ELSE
+		statement*)?
+	END)
+|	IF expression (COMMA | SEMI_COLON) statement (COMMA | SEMI_COLON) END
+;
+
+st_for:
+	FOR id_for ASSIGN expression COMMA?
+		statement*
+	END
+;
+
+st_switch:
+	SWITCH expression
+		(CASE expression
+			statement*)*
+		(OTHERWISE
+			statement*)?
+	END
+;
+
+st_try:
+	TRY COMMA?
+		statement*
+	(CATCH id_exception?
+		statement*)*
+	END
+;
+
+st_while:
+	WHILE expression COMMA?
+		statement*
+	END
+;
+
 
 method_attribute
 :	'Abstract'
@@ -39,7 +120,7 @@ method_attribute
 ;
 
 method_attribute_value
-:	bool
+:	atom_boolean
 |	property_access_type
 ;
 
@@ -59,7 +140,7 @@ property_attribute
 ;
 
 property_attribute_value
-:	bool
+:	atom_boolean
 |	property_access_type
 ;
 
@@ -70,108 +151,38 @@ property_access_type
 |	'immutable'
 ;
 
-function_definition
-:	FUNCTION (function_returns ASSIGN)? function_name function_params?
-		statement*
-	(END | RETURN)?
-;
-
-function_handle_definition
-:	AT function_name
-|	AT function_params statement
-;
-
 function_params
-:	LEFT_PARENTHESIS (identifier (COMMA identifier)*)? RIGHT_PARENTHESIS
+:	LEFT_PARENTHESIS (id_var (COMMA id_var)*)? RIGHT_PARENTHESIS
 ;
 
 function_returns
-:	identifier
-|	LEFT_SQUARE_BRACKET identifier (COMMA identifier)* RIGHT_SQUARE_BRACKET
+:	id_var
+|	LEFT_SQUARE_BRACKET id_var (COMMA id_var)* RIGHT_SQUARE_BRACKET
 ;
 
 statement
-:	(	assignment
-	|	command
-	|	if_statement
-	|	for_statement
-	|	switch_statement
-	|	try_statement
-	|	while_statement
-	|	function_call
-	|	field_access
-	| 	identifier
+:	(	st_assign
+	|	st_command
+	|	st_if
+	|	st_for
+	|	st_switch
+	|	st_try
+	|	st_while
+	|	xpr_function
+	|	xpr_field
+	| 	id_var
 	| 	BREAK
 	| 	CONTINUE
 	| 	RETURN	)
 (	COMMA | SEMI_COLON	)?
 ;
 
-command:
-	function_name command_argument+
-;
-
-// if_statement can be multiline or single line
-if_statement
-:	(IF expression COMMA?
-		statement*
-	(ELSEIF expression COMMA?
-		statement*)*
-	(ELSE
-		statement*)?
-	END)
-|	IF expression (COMMA | SEMI_COLON) statement (COMMA | SEMI_COLON) END
-;
-
-for_statement:
-	FOR for_index ASSIGN expression COMMA?
-		statement*
-	END
-;
-
-for_index:
-	ID
-;
-
-switch_statement:
-	SWITCH expression
-		(CASE expression
-			statement*)*
-		(OTHERWISE
-			statement*)?
-	END
-;
-
-try_statement:
-	TRY COMMA?
-		statement*
-	(CATCH exception?
-		statement*)*
-	END
-;
-
-while_statement:
-	WHILE expression COMMA?
-		statement*
-	END
-;
-
-// MATLAB does allow for return values to be specified without a COMMA, e.g. [h w] = size(X); 
-// However, it does give a warning saying this is not recommended. Thus we don't parse this kind
-// of assignment.
-assignment
-:	lvalue ASSIGN 
-		(array | array_access | cell | cell_access | expression | function_call | identifier | field_access)
-|	LEFT_SQUARE_BRACKET (lvalue | NOT) (COMMA (lvalue | NOT))* RIGHT_SQUARE_BRACKET ASSIGN
-		(array | array_access | cell | cell_access | expression | function_call | identifier | field_access)
-;
-
 // Things that can be assigned *to*.
 lvalue
-:	array_access
-|	cell_access
-|	identifier
-|	field_access
+:	xpr_array
+|	xpr_cell
+|	id_var
+|	xpr_field
 ;
 
 expression
@@ -202,75 +213,76 @@ expression
 |	expression BINARY_OR expression
 |	expression LOGICAL_AND expression
 |	expression LOGICAL_OR expression
-|	array
-|	array_access
-|	bool
-|	cell
-|	cell_access
-|	empty_array
-|	empty_cell
-|	function_call
-|	function_handle_definition
-|	identifier
-|	literal
-|	field_access
+|	def_array
+|	xpr_array
+|	atom_boolean
+|	def_cell
+|	xpr_cell
+|	atom_empty_array
+|	atom_empty_cell
+|	xpr_function
+|	def_handle
+|	id_var
+|	xpr_field
 ;
 
-// Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
-// [0 0 8]	[[0 0 8] [9 0 8]]	[[0 0 8],[9 0 8]]	[[0 0, 8],[9 0 8]] and
-// [0 8 9, 10, 40 50 60] are all valid matlab expressions.
-// The caveat is that you can't have two simultaneous commas. That throws an error. 
-// E.g. [0,,1] is not allowed.
-array
-:	LEFT_SQUARE_BRACKET expression (COMMA? expression)* RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_SQUARE_BRACKET
+// An array expression in MATLAB is an expression that takes an array and indexes it to give
+// some subset of the array. This can work on multidimentional arrays or cell arrays.
+// 
+// SYNTAX
+//	identifier (index_express [, indexexpression] ...)
+xpr_array
+:	(xpr_cell | id_var) LEFT_PARENTHESIS xpr_index (COMMA xpr_index)* RIGHT_PARENTHESIS
 ;
 
-array_access
-:	(cell_access | identifier) LEFT_PARENTHESIS range (COMMA range)* RIGHT_PARENTHESIS
-;
-
-cell
-:	LEFT_BRACE expression (COMMA? expression)* RIGHT_BRACE
-|	LEFT_BRACE expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_BRACE
-;
-
-cell_access
-:	identifier LEFT_BRACE range (COMMA range)* RIGHT_BRACE
-;
-
-function_call
-:	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
-;
-
-literal
-:	INT
-|	FLOAT
-|	IMAGINARY
-|	STRING
-|	bool
-|	empty_array
+xpr_cell
+:	id_var LEFT_BRACE xpr_index (COMMA xpr_index)* RIGHT_BRACE
 ;
 
 // a.b == identifier DOT identifier
 // a.b.c == (a.b).c == field_access DOT identifier
-field_access
-:	identifier DOT identifier
-|	identifier DOT array_access
-|	identifier DOT cell_access
-|	identifier DOT function_call
-|	array_access DOT identifier
-|	array_access DOT array_access
-|	array_access DOT cell_access
-|	array_access DOT function_call
-|	cell_access DOT identifier
-|	cell_access DOT array_access
-|	cell_access DOT cell_access
-|	cell_access DOT function_call
-|	field_access DOT identifier
-|	field_access DOT array_access
-|	field_access DOT cell_access
-|	field_access DOT function_call
+// a.b.c.f() == ((a.b).c).f()
+xpr_field
+:	id_var DOT id_var
+|	id_var DOT xpr_array
+|	id_var DOT xpr_cell
+|	id_var DOT xpr_function
+|	xpr_array DOT id_var
+|	xpr_array DOT xpr_array
+|	xpr_array DOT xpr_cell
+|	xpr_array DOT xpr_function
+|	xpr_cell DOT id_var
+|	xpr_cell DOT xpr_array
+|	xpr_cell DOT xpr_cell
+|	xpr_cell DOT xpr_function
+|	xpr_field DOT id_var
+|	xpr_field DOT xpr_array
+|	xpr_field DOT xpr_cell
+|	xpr_field DOT xpr_function
+;
+
+xpr_function
+:	id_function LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
+;
+
+// An index expression is any expression that (potentially) evaluates to an index that can be
+// used for array/cell access. Index expression evaluate to positive integers or logical arrays.
+// Index expressions can use two special syntaxes that are not applicable to expressions not
+// used as indices. The first is the keyword `end`. The second is a free standing `:` that
+// evaluates to `1:end` implicitly.
+xpr_index
+:	COLON
+|	(	INT
+	|	END
+	|	STRING
+	|	atom_boolean
+	|	atom_empty_array
+	|	id_var
+	|	xpr_array
+	|	LEFT_PARENTHESIS xpr_index RIGHT_PARENTHESIS
+	|	xpr_index (TIMES | LEFT_DIVIDE | RIGHT_DIVIDE) xpr_index
+	|	xpr_index (PLUS | MINUS) xpr_index
+	)
 ;
 
 // ## Ranges in MATLAB
@@ -295,50 +307,77 @@ field_access
 // However, the fact that `end` is always a positive scalar int can help prune the rule definition.
 range
 :	COLON
-|	(expression | END)
-|	(expression | END) COLON (expression | END)
-|	(expression | END) COLON (expression | END) COLON (expression | END)
+|	xpr_index
+|	xpr_index COLON xpr_index
+|	xpr_index COLON xpr_index COLON xpr_index
 ;
 
-expression_list:
-	expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* SEMI_COLON?
-;
-
-command_argument:
-	ID
-;
-
-exception:
-	ID
-;
-
-function_name:
-	ID
-;
-
-namespace:
-	ID
-;
-
-property_name
+command_argument
 :	ID
 ;
 
-bool
+// ID of a class
+id_class
+:	ID
+;
+
+// ID of an exception in a try/catch statement
+id_exception:
+	ID
+;
+
+// The ID of the index variable for a 'for' loop
+id_for
+:	ID
+;
+
+// ID of a function
+id_function
+:	ID
+;
+
+// ID of a property in a class
+id_property
+:	ID
+;
+
+// ID of a superclass from which a class is derived
+id_super
+:	ID
+;
+
+// ID of a variable
+id_var
+:	ID
+;
+
+atom_boolean
 :	'true'
 |	'false'
 ;
 
-empty_array
+atom_float
+:	FLOAT
+;
+
+atom_imaginary
+:	IMAGINARY
+;
+
+atom_integer
+:	INT
+;
+
+atom_string
+:	STRING
+;
+
+atom_empty_array
 :	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
 ;
 
-empty_cell
+atom_empty_cell
 :	LEFT_BRACE RIGHT_BRACE
-;
-
-identifier
-:	ID
 ;
 
 //// LEXER RULES
