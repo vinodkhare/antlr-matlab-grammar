@@ -99,7 +99,7 @@ statement
 	|	try_statement
 	|	while_statement
 	|	function_call
-	|	property_access
+	|	field_access
 	| 	identifier
 	| 	BREAK
 	| 	CONTINUE
@@ -161,9 +161,9 @@ while_statement:
 // of assignment.
 assignment
 :	lvalue ASSIGN 
-		(array | array_access | cell | cell_access | expression | function_call | identifier | property_access)
+		(array | array_access | cell | cell_access | expression | function_call | identifier | field_access)
 |	LEFT_SQUARE_BRACKET (lvalue | NOT) (COMMA (lvalue | NOT))* RIGHT_SQUARE_BRACKET ASSIGN
-		(array | array_access | cell | cell_access | expression | function_call | identifier | property_access)
+		(array | array_access | cell | cell_access | expression | function_call | identifier | field_access)
 ;
 
 // Things that can be assigned *to*.
@@ -171,12 +171,11 @@ lvalue
 :	array_access
 |	cell_access
 |	identifier
-|	property_access
+|	field_access
 ;
 
 expression
-:	expression DOT expression
-|	LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
+:	LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
 |	expression ELMENT_WISE_TRANSPOSE
 |	expression ELMENT_WISE_POWER expression
 |	expression TRANSPOSE
@@ -214,7 +213,7 @@ expression
 |	function_handle_definition
 |	identifier
 |	literal
-|	property_access
+|	field_access
 ;
 
 // Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
@@ -240,10 +239,8 @@ cell_access
 :	identifier LEFT_BRACE range (COMMA range)* RIGHT_BRACE
 ;
 
-function_call:
-	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
-|	identifier DOT function_call
-|	property_access DOT function_call
+function_call
+:	function_name LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
 ;
 
 literal
@@ -255,10 +252,25 @@ literal
 |	empty_array
 ;
 
-property_access:
-	array_access DOT identifier
-|	identifier DOT identifier
-|	property_access DOT identifier
+// a.b == identifier DOT identifier
+// a.b.c == (a.b).c == field_access DOT identifier
+field_access
+:	identifier DOT identifier
+|	identifier DOT array_access
+|	identifier DOT cell_access
+|	identifier DOT function_call
+|	array_access DOT identifier
+|	array_access DOT array_access
+|	array_access DOT cell_access
+|	array_access DOT function_call
+|	cell_access DOT identifier
+|	cell_access DOT array_access
+|	cell_access DOT cell_access
+|	cell_access DOT function_call
+|	field_access DOT identifier
+|	field_access DOT array_access
+|	field_access DOT cell_access
+|	field_access DOT function_call
 ;
 
 // ## Ranges in MATLAB
