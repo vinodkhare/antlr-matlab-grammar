@@ -21,15 +21,6 @@ We need to add ANTLR and generated CLASS files to the MATLAB Java static path. A
 
 Since the output above is being generated on `stdout` but Java, we can't capture it into a MATLAB variable. The workaround here is to use the MATLAB [`diary`](https://www.mathworks.com/help/matlab/ref/diary.html) function. This writes the command line output to a text file called `diary` in the current folder.
 
-- Use a minus sign for a bullet
-+ Or plus sign
-* Or an asterisk
-
-1. Numbered lists are easy
-2. Markdown keeps track of
-   the numbers for you
-7. So this will be item 3.
-
 ## Ranges in MATLAB
 
 Ranges in MATLAB can be written in the following forms
@@ -39,34 +30,3 @@ Ranges in MATLAB can be written in the following forms
 * `A` - a single expression `A`
 * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to `[2.3000    3.3000    4.3000]`.
 * `A:S:B` - indicates a range with a user specified step.
-
-```plantuml
-@startuml
-
-abstract class AbstractList
-abstract AbstractCollection
-interface List
-interface Collection
-
-List --|> AbstractList
-Collection <|-- AbstractCollection
-
-Collection <|- List
-AbstractCollection <|- AbstractList
-AbstractList <|-- ArrayList
-
-class ArrayList {
-  Object[] elementData
-  size()
-}
-
-enum TimeUnit {
-  DAYS
-  HOURS
-  MINUTES
-}
-
-annotation SuppressWarnings
-
-@enduml
-```

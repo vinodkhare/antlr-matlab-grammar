@@ -15,21 +15,6 @@ matlab_file
 // Definitions are MATLAB language constructs that only 'define' something. A definition when
 // evaluated does not result in a value. A definition is a template only.
 
-// Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
-// [0 0 8]	[[0 0 8] [9 0 8]]	[[0 0 8],[9 0 8]]	[[0 0, 8],[9 0 8]] and
-// [0 8 9, 10, 40 50 60] are all valid matlab expressions.
-// The caveat is that you can't have two simultaneous commas. That throws an error. 
-// E.g. [0,,1] is not allowed.
-def_array
-:	LEFT_SQUARE_BRACKET expression (COMMA? expression)* RIGHT_SQUARE_BRACKET
-|	LEFT_SQUARE_BRACKET expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_SQUARE_BRACKET
-;
-
-def_cell
-:	LEFT_BRACE expression (COMMA? expression)* RIGHT_BRACE
-|	LEFT_BRACE expression (COMMA? expression)* (SEMI_COLON expression (COMMA? expression)*)* RIGHT_BRACE
-;
-
 def_class:
 	CLASSDEF id_class LESS_THAN id_super (BINARY_AND id_super)*
 	(	(PROPERTIES LEFT_PARENTHESIS property_attribute (ASSIGN property_attribute_value)? (COMMA property_attribute (ASSIGN property_attribute_value)?)* RIGHT_PARENTHESIS)?
@@ -60,9 +45,9 @@ def_handle
 // of assignment.
 st_assign
 :	lvalue ASSIGN 
-		(def_array | xpr_array | def_cell | xpr_cell | expression | xpr_function | id_var | xpr_field)
+		(xpr_array | xpr_array_index | xpr_cell | xpr_cell_index | xpr_tree | xpr_function | id_var | xpr_field)
 |	LEFT_SQUARE_BRACKET (lvalue | NOT) (COMMA (lvalue | NOT))* RIGHT_SQUARE_BRACKET ASSIGN
-		(def_array | xpr_array | def_cell | xpr_cell | expression | xpr_function | id_var | xpr_field)
+		(xpr_array | xpr_array_index | xpr_cell | xpr_cell_index | xpr_tree | xpr_function | id_var | xpr_field)
 ;
 
 st_command:
@@ -71,25 +56,25 @@ st_command:
 
 // if_statement can be multiline or single line
 st_if
-:	(IF expression COMMA?
+:	(IF xpr_tree COMMA?
 		statement*
-	(ELSEIF expression COMMA?
+	(ELSEIF xpr_tree COMMA?
 		statement*)*
 	(ELSE
 		statement*)?
 	END)
-|	IF expression (COMMA | SEMI_COLON) statement (COMMA | SEMI_COLON) END
+|	IF xpr_tree (COMMA | SEMI_COLON) statement (COMMA | SEMI_COLON) END
 ;
 
 st_for:
-	FOR id_for ASSIGN expression COMMA?
+	FOR id_for ASSIGN xpr_tree COMMA?
 		statement*
 	END
 ;
 
 st_switch:
-	SWITCH expression
-		(CASE expression
+	SWITCH xpr_tree
+		(CASE xpr_tree
 			statement*)*
 		(OTHERWISE
 			statement*)?
@@ -105,11 +90,10 @@ st_try:
 ;
 
 st_while:
-	WHILE expression COMMA?
+	WHILE xpr_tree COMMA?
 		statement*
 	END
 ;
-
 
 method_attribute
 :	'Abstract'
@@ -179,64 +163,72 @@ statement
 
 // Things that can be assigned *to*.
 lvalue
-:	xpr_array
-|	xpr_cell
+:	xpr_array_index
+|	xpr_cell_index
 |	id_var
 |	xpr_field
 ;
 
-expression
-:	LEFT_PARENTHESIS expression RIGHT_PARENTHESIS
-|	expression ELMENT_WISE_TRANSPOSE
-|	expression ELMENT_WISE_POWER expression
-|	expression TRANSPOSE
-|	expression POWER expression
-|	PLUS expression
-|	MINUS expression
-|	NOT expression
-|	expression ELMENT_WISE_TIMES expression
-|	expression ELMENT_WISE_RIGHT_DIVIDE expression
-|	expression ELMENT_WISE_LEFT_DIVIDE expression
-|	expression TIMES expression
-|	expression RIGHT_DIVIDE expression
-|	expression LEFT_DIVIDE expression
-|	expression PLUS expression
-|	expression MINUS expression
-|	expression COLON expression
-|	expression LESS_THAN expression
-|	expression LESS_THAN_OR_EQUAL expression
-|	expression GREATER_THAN expression
-|	expression GREATER_THAN_OR_EQUAL expression
-|	expression EQUALS expression
-|	expression NOT_EQUAL expression
-|	expression BINARY_AND expression
-|	expression BINARY_OR expression
-|	expression LOGICAL_AND expression
-|	expression LOGICAL_OR expression
-|	def_array
-|	xpr_array
-|	atom_boolean
-|	def_cell
-|	xpr_cell
+xpr_tree
+:	atom_boolean
 |	atom_empty_array
-|	atom_empty_cell
-|	xpr_function
-|	def_handle
-|	id_var
+|	atom_float
+|	atom_imaginary
+|	atom_integer
+|	atom_string
+|	atom_var
+|	xpr_array
+|	xpr_array_index
+|	xpr_cell
+|	xpr_cell_index
 |	xpr_field
+|	xpr_function
+|	LEFT_PARENTHESIS xpr_tree RIGHT_PARENTHESIS
+|	xpr_tree (ELMENT_WISE_TRANSPOSE | TRANSPOSE)
+|	xpr_tree (ELMENT_WISE_POWER | POWER) xpr_tree
+|	(PLUS | MINUS | NOT) xpr_tree
+|	xpr_tree (ELMENT_WISE_TIMES | ELMENT_WISE_RIGHT_DIVIDE | ELMENT_WISE_LEFT_DIVIDE) xpr_tree
+|	xpr_tree (TIMES | RIGHT_DIVIDE | LEFT_DIVIDE) xpr_tree
+|	xpr_tree (PLUS | MINUS) xpr_tree
+|	xpr_tree COLON xpr_tree
+|	xpr_tree LESS_THAN xpr_tree
+|	xpr_tree LESS_THAN_OR_EQUAL xpr_tree
+|	xpr_tree GREATER_THAN xpr_tree
+|	xpr_tree GREATER_THAN_OR_EQUAL xpr_tree
+|	xpr_tree EQUALS xpr_tree
+|	xpr_tree NOT_EQUAL xpr_tree
+|	xpr_tree BINARY_AND xpr_tree
+|	xpr_tree BINARY_OR xpr_tree
+|	xpr_tree LOGICAL_AND xpr_tree
+|	xpr_tree LOGICAL_OR xpr_tree
 ;
 
-// An array expression in MATLAB is an expression that takes an array and indexes it to give
+// Apparently MATLAB doesn't care whether you add commas to an array definition or not. E.g.
+// [0 0 8]	[[0 0 8] [9 0 8]]	[[0 0 8],[9 0 8]]	[[0 0, 8],[9 0 8]] and
+// [0 8 9, 10, 40 50 60] are all valid matlab expressions.
+// The caveat is that you can't have two simultaneous commas. That throws an error. 
+// E.g. [0,,1] is not allowed.
+xpr_array
+:	LEFT_SQUARE_BRACKET xpr_tree (COMMA? xpr_tree)* RIGHT_SQUARE_BRACKET
+|	LEFT_SQUARE_BRACKET xpr_tree (COMMA? xpr_tree)* (SEMI_COLON xpr_tree (COMMA? xpr_tree)*)* RIGHT_SQUARE_BRACKET
+;
+
+xpr_cell
+:	LEFT_BRACE xpr_tree (COMMA? xpr_tree)* RIGHT_BRACE
+|	LEFT_BRACE xpr_tree (COMMA? xpr_tree)* (SEMI_COLON xpr_tree (COMMA? xpr_tree)*)* RIGHT_BRACE
+;
+
+// An array_index expression in MATLAB is an expression that takes an array and indexes it to give
 // some subset of the array. This can work on multidimentional arrays or cell arrays.
 // 
 // SYNTAX
 //	identifier (index_express [, indexexpression] ...)
-xpr_array
-:	(xpr_cell | id_var) LEFT_PARENTHESIS xpr_index (COMMA xpr_index)* RIGHT_PARENTHESIS
+xpr_array_index
+:	(xpr_cell_index | id_var) LEFT_PARENTHESIS (atom_index_all | xpr_index) (COMMA (atom_index_all | xpr_index))* RIGHT_PARENTHESIS
 ;
 
-xpr_cell
-:	id_var LEFT_BRACE xpr_index (COMMA xpr_index)* RIGHT_BRACE
+xpr_cell_index
+:	id_var LEFT_BRACE (atom_index_all | xpr_index) (COMMA (atom_index_all | xpr_index))* RIGHT_BRACE
 ;
 
 // a.b == identifier DOT identifier
@@ -244,25 +236,25 @@ xpr_cell
 // a.b.c.f() == ((a.b).c).f()
 xpr_field
 :	id_var DOT id_var
-|	id_var DOT xpr_array
-|	id_var DOT xpr_cell
+|	id_var DOT xpr_array_index
+|	id_var DOT xpr_cell_index
 |	id_var DOT xpr_function
-|	xpr_array DOT id_var
-|	xpr_array DOT xpr_array
-|	xpr_array DOT xpr_cell
-|	xpr_array DOT xpr_function
-|	xpr_cell DOT id_var
-|	xpr_cell DOT xpr_array
-|	xpr_cell DOT xpr_cell
-|	xpr_cell DOT xpr_function
+|	xpr_array_index DOT id_var
+|	xpr_array_index DOT xpr_array_index
+|	xpr_array_index DOT xpr_cell_index
+|	xpr_array_index DOT xpr_function
+|	xpr_cell_index DOT id_var
+|	xpr_cell_index DOT xpr_array_index
+|	xpr_cell_index DOT xpr_cell_index
+|	xpr_cell_index DOT xpr_function
 |	xpr_field DOT id_var
-|	xpr_field DOT xpr_array
-|	xpr_field DOT xpr_cell
+|	xpr_field DOT xpr_array_index
+|	xpr_field DOT xpr_cell_index
 |	xpr_field DOT xpr_function
 ;
 
 xpr_function
-:	id_function LEFT_PARENTHESIS (expression (COMMA expression)*)? RIGHT_PARENTHESIS
+:	id_function LEFT_PARENTHESIS (xpr_tree (COMMA xpr_tree)*)? RIGHT_PARENTHESIS
 ;
 
 // An index expression is any expression that (potentially) evaluates to an index that can be
@@ -271,45 +263,38 @@ xpr_function
 // used as indices. The first is the keyword `end`. The second is a free standing `:` that
 // evaluates to `1:end` implicitly.
 xpr_index
-:	COLON
-|	(	INT
-	|	END
-	|	STRING
-	|	atom_boolean
-	|	atom_empty_array
-	|	id_var
-	|	xpr_array
-	|	LEFT_PARENTHESIS xpr_index RIGHT_PARENTHESIS
-	|	xpr_index (TIMES | LEFT_DIVIDE | RIGHT_DIVIDE) xpr_index
-	|	xpr_index (PLUS | MINUS) xpr_index
-	)
-;
-
-// ## Ranges in MATLAB
-//
-// Ranges in MATLAB can be written in the following forms
-//
-// * `:` - a simple color indicates the 'all' range.
-// * `end` - indicates the last element of the array.
-// * `A` - a single expression `A`
-// * `A:B` - indicates a range from `A` to `B`, where `A` and `B` are any expression including
-// `end`. Floats are accepted, they are incremented by 1.0. E.g. `2.3:4.5` evaluates to
-// `[2.3000    3.3000    4.3000]`. 
-// * `A:S:B` - indicates a range with a user specified step.
-//
-// There is an additional complication here. The special keyword `end` can be used in any range
-// expression but does not have a meaning outside of array or cell access. E.g. if `a = randn(100, 1)`,
-// then `a(end / 10)` is a valid expression. But the expression end / 10 itself outside of array
-// or cell access doesn't have a meaning. Thus, we need two kinds of expressions - those that can
-// be used in array/cell access that those that can be independent.
-//
-// This means that the `expression` parser rule must be duplicated with the addition of `end`.
-// However, the fact that `end` is always a positive scalar int can help prune the rule definition.
-range
-:	COLON
-|	xpr_index
-|	xpr_index COLON xpr_index
-|	xpr_index COLON xpr_index COLON xpr_index
+:	atom_boolean
+|	atom_empty_array
+|	atom_end
+|	atom_float
+|	atom_imaginary
+|	atom_integer
+|	atom_string
+|	atom_var
+|	xpr_array
+|	xpr_array_index
+|	xpr_cell
+|	xpr_cell_index
+|	xpr_field
+|	xpr_function
+|	LEFT_PARENTHESIS xpr_tree RIGHT_PARENTHESIS
+|	xpr_tree (ELMENT_WISE_TRANSPOSE | TRANSPOSE)
+|	xpr_tree (ELMENT_WISE_POWER | POWER) xpr_tree
+|	(PLUS | MINUS | NOT) xpr_tree
+|	xpr_tree (ELMENT_WISE_TIMES | ELMENT_WISE_RIGHT_DIVIDE | ELMENT_WISE_LEFT_DIVIDE) xpr_tree
+|	xpr_tree (TIMES | RIGHT_DIVIDE | LEFT_DIVIDE) xpr_tree
+|	xpr_tree (PLUS | MINUS) xpr_tree
+|	xpr_tree COLON xpr_tree
+|	xpr_tree LESS_THAN xpr_tree
+|	xpr_tree LESS_THAN_OR_EQUAL xpr_tree
+|	xpr_tree GREATER_THAN xpr_tree
+|	xpr_tree GREATER_THAN_OR_EQUAL xpr_tree
+|	xpr_tree EQUALS xpr_tree
+|	xpr_tree NOT_EQUAL xpr_tree
+|	xpr_tree BINARY_AND xpr_tree
+|	xpr_tree BINARY_OR xpr_tree
+|	xpr_tree LOGICAL_AND xpr_tree
+|	xpr_tree LOGICAL_OR xpr_tree
 ;
 
 command_argument
@@ -356,12 +341,28 @@ atom_boolean
 |	'false'
 ;
 
+atom_empty_array
+:	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
+;
+
+atom_empty_cell
+:	LEFT_BRACE RIGHT_BRACE
+;
+
+atom_end
+:	END
+;
+
 atom_float
 :	FLOAT
 ;
 
 atom_imaginary
 :	IMAGINARY
+;
+
+atom_index_all
+:	COLON
 ;
 
 atom_integer
@@ -372,12 +373,8 @@ atom_string
 :	STRING
 ;
 
-atom_empty_array
-:	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
-;
-
-atom_empty_cell
-:	LEFT_BRACE RIGHT_BRACE
+atom_var
+:	ID
 ;
 
 //// LEXER RULES
