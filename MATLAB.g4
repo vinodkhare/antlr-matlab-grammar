@@ -126,9 +126,9 @@ def_class
 		( attrib_class_boolean ( ASSIGN atom_boolean )? | attrib_class_meta ( ASSIGN atom_meta )? )*
 		RIGHT_PARENTHESIS
 	)?
-	id_class 
+	atom_var 
 	LESS_THAN 
-	id_super (BINARY_AND id_super)*
+	atom_var (BINARY_AND atom_var)*
 
 	(	PROPERTIES
 		(	LEFT_PARENTHESIS
@@ -137,7 +137,7 @@ def_class
 			)+	// One or more attributes
 			RIGHT_PARENTHESIS
 		)?	// Zero or one property attribute blocks
-		id_property*
+		atom_var*
 		END
 	)*	// Zero or more property blocks
 	
@@ -156,7 +156,7 @@ def_class
 ;
 
 def_function:
-	FUNCTION (function_returns ASSIGN)? id_function function_params?
+	FUNCTION (function_returns ASSIGN)? atom_var function_params?
 	statement*
 	(END | RETURN)?
 ;
@@ -231,7 +231,7 @@ st_assign
 ;
 
 st_command:
-	id_function command_argument+
+	atom_var command_argument+
 ;
 
 // if_statement can be multiline or single line
@@ -247,7 +247,7 @@ st_if
 ;
 
 st_for:
-	FOR id_for ASSIGN xpr_tree COMMA?
+	FOR atom_var ASSIGN xpr_tree COMMA?
 		statement*
 	END
 ;
@@ -264,7 +264,7 @@ st_switch:
 st_try:
 	TRY COMMA?
 		statement*
-	(CATCH id_exception?
+	(CATCH atom_var?
 		statement*)*
 	END
 ;
@@ -439,45 +439,15 @@ xpr_field
 ;
 
 xpr_function
-:	id_function LEFT_PARENTHESIS ((xpr_tree | xpr_handle) (COMMA (xpr_tree | xpr_handle))*)? RIGHT_PARENTHESIS
+:	atom_var LEFT_PARENTHESIS ((xpr_tree | xpr_handle) (COMMA (xpr_tree | xpr_handle))*)? RIGHT_PARENTHESIS
 ;
 
 xpr_handle
-:	AT id_function
+:	AT atom_var
 |	AT function_params statement
 ;
 
 command_argument
-:	ID
-;
-
-// ID of a class
-id_class
-:	ID
-;
-
-// ID of an exception in a try/catch statement
-id_exception:
-	ID
-;
-
-// The ID of the index variable for a 'for' loop
-id_for
-:	ID
-;
-
-// ID of a function
-id_function
-:	ID
-;
-
-// ID of a property in a class
-id_property
-:	ID
-;
-
-// ID of a superclass from which a class is derived
-id_super
 :	ID
 ;
 
@@ -515,8 +485,8 @@ atom_integer
 ;
 
 atom_meta
-:	QUESTION id_class
-|	LEFT_BRACE (QUESTION id_class (COMMA? QUESTION id_class)*)? RIGHT_BRACE
+:	QUESTION atom_var
+|	LEFT_BRACE (QUESTION atom_var (COMMA? QUESTION atom_var)*)? RIGHT_BRACE
 ;
 
 atom_string
