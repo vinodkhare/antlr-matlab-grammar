@@ -5,6 +5,108 @@ grammar MATLAB;
 	boolean maybeString = false;
 }
 
+//// LEXER RULES
+
+// Match all newline characters
+NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
+
+// Match comments and send them to the HIDDEN channel
+BLOCKCOMMENT	: '%{' .*?  '%}' -> channel(HIDDEN);
+COMMENT			: '%' .*? NL  -> channel(HIDDEN);
+
+// Match whitespace characters and skip
+WS : [ \t] { maybeString = true; } -> skip;
+
+// Match the multiline break and skip it
+ELLIPSIS: '...' -> skip;
+
+// Keywords
+BREAK		: 'break';
+CASE		: 'case';
+CATCH		: 'catch';
+CLASSDEF	: 'classdef';
+CONTINUE	: 'continue';
+ELSE		: 'else';
+ELSEIF		: 'elseif';
+END			: 'end';
+FOR			: 'for';
+FUNCTION	: 'function';
+GLOBAL		: 'global';
+IF			: 'if';
+OTHERWISE	: 'otherwise';
+PERSISTENT	: 'persistent';
+PROPERTIES	: 'properties';
+RETURN		: 'return';
+SWITCH		: 'switch';
+TRY			: 'try';
+WHILE		: 'while';
+
+// Two Character Operators
+ELMENT_WISE_LEFT_DIVIDE		: './';
+ELMENT_WISE_POWER			: '.^';
+ELMENT_WISE_RIGHT_DIVIDE	: '.\\';
+ELMENT_WISE_TIMES			: '.*';
+ELMENT_WISE_TRANSPOSE		: '.\'';
+EQUALS						: '==' {maybeString = true;};
+GREATER_THAN_OR_EQUAL		: '>=';
+LESS_THAN_OR_EQUAL			: '<=';
+LOGICAL_AND					: '&&';
+LOGICAL_OR					: '||';
+NOT_EQUAL					: '~=';
+
+// Single Character Operators
+ASSIGN			: '=' { maybeString = true; };
+BINARY_AND		: '&';
+BINARY_OR		: '|';
+COLON			: ':';
+GREATER_THAN	: '>' { maybeString = true; };
+LEFT_DIVIDE		: '/';
+LESS_THAN		: '<' { maybeString = true; };
+MINUS			: '-';
+NOT				: '~';
+PLUS			: '+';
+POWER			: '^';
+RIGHT_DIVIDE	: '\\';
+TIMES			: '*';
+TRANSPOSE		: '\'';
+
+// Special Characters
+AT						: '@';
+COMMA					: ',' {maybeString = true;};
+DOT						: '.';
+SEMI_COLON				: ';' {maybeString = true;};
+LEFT_BRACE				: '{' {maybeString = true;};
+LEFT_PARENTHESIS		: '(' {maybeString = true;};
+LEFT_SQUARE_BRACKET		: '[' {maybeString = true;};
+QUESTION				: '?';
+RIGHT_BRACE				: '}' {maybeString = false;};
+RIGHT_PARENTHESIS		: ')' {maybeString = false;};
+RIGHT_SQUARE_BRACKET	: ']' {maybeString = false;};
+
+// Atoms - identifiers, strings, numbers, whitespace
+ID: [a-zA-Z] [a-zA-Z0-9_]* { maybeString = false; };
+
+IMAGINARY
+:	INT 'i'
+|	FLOAT 'i'
+;
+
+INT: DIGIT+;
+
+FLOAT
+:	DIGIT+ '.' DIGIT* EXPONENT?
+|	DIGIT+			  EXPONENT
+|		   '.' DIGIT+ EXPONENT?
+;
+
+fragment
+EXPONENT: ('e'|'E') ('+'|'-')? DIGIT+;
+
+fragment
+DIGIT: [0-9];
+
+STRING : {maybeString}? '\'' ( ~('\'' | '\r' | '\n') | '\'\'')* '\'';
+
 //// Parser Rules
 matlab_file:
 	( def_class | statement | def_function )*
@@ -36,14 +138,14 @@ def_class
 		END
 	)*	// Zero or more property blocks
 	
-	(	METHODS
+	(	'methods'
 		(	LEFT_PARENTHESIS
 			(	attrib_method_boolean ( ASSIGN atom_boolean )?
 			|	attrib_method_access  ( ASSIGN atom_access )?
 			)+	// One or more attributes
 			RIGHT_PARENTHESIS
 		)?	// Zero or one property attribute blocks
-		( def_function | def_function_access )*
+		def_function*
 		END
 	)*	// Zero or more property blocks
 
@@ -52,12 +154,6 @@ def_class
 
 def_function:
 	FUNCTION (function_returns ASSIGN)? id_function function_params?
-	statement*
-	(END | RETURN)?
-;
-
-def_function_access:
-	FUNCTION (function_returns ASSIGN)? ('get' | 'set') DOT id_property function_params?
 	statement*
 	(END | RETURN)?
 ;
@@ -201,7 +297,7 @@ statement:
 	| 	CONTINUE
 	| 	RETURN
 	)
-( COMMA | SEMI_COLON )?
+( COMMA | SEMI_COLON | NL )?
 ;
 
 // ## Expression Trees
@@ -433,105 +529,5 @@ atom_var
 :	ID
 ;
 
-//// LEXER RULES
 
-// Match all newline characters
-NL : ('\r' '\n' | '\r' | '\n') -> channel(HIDDEN);
-
-// Match comments and send them to the HIDDEN channel
-BLOCKCOMMENT	: '%{' .*?  '%}' -> channel(HIDDEN);
-COMMENT			: '%' .*? NL  -> channel(HIDDEN);
-
-// Match whitespace characters and skip
-WS : [ \t] { maybeString = true; } -> skip;
-
-// Match the multiline break and skip it
-ELLIPSIS: '...' -> skip;
-
-// Keywords
-BREAK		: 'break';
-CASE		: 'case';
-CATCH		: 'catch';
-CLASSDEF	: 'classdef';
-CONTINUE	: 'continue';
-ELSE		: 'else';
-ELSEIF		: 'elseif';
-END			: 'end';
-FOR			: 'for';
-FUNCTION	: 'function';
-GLOBAL		: 'global';
-IF			: 'if';
-OTHERWISE	: 'otherwise';
-PERSISTENT	: 'persistent';
-PROPERTIES	: 'properties';
-RETURN		: 'return';
-SWITCH		: 'switch';
-TRY			: 'try';
-WHILE		: 'while';
-
-// Two Character Operators
-ELMENT_WISE_LEFT_DIVIDE		: './';
-ELMENT_WISE_POWER			: '.^';
-ELMENT_WISE_RIGHT_DIVIDE	: '.\\';
-ELMENT_WISE_TIMES			: '.*';
-ELMENT_WISE_TRANSPOSE		: '.\'';
-EQUALS						: '==' {maybeString = true;};
-GREATER_THAN_OR_EQUAL		: '>=';
-LESS_THAN_OR_EQUAL			: '<=';
-LOGICAL_AND					: '&&';
-LOGICAL_OR					: '||';
-NOT_EQUAL					: '~=';
-
-// Single Character Operators
-ASSIGN			: '=' { maybeString = true; };
-BINARY_AND		: '&';
-BINARY_OR		: '|';
-COLON			: ':';
-GREATER_THAN	: '>' { maybeString = true; };
-LEFT_DIVIDE		: '/';
-LESS_THAN		: '<' { maybeString = true; };
-MINUS			: '-';
-NOT				: '~';
-PLUS			: '+';
-POWER			: '^';
-RIGHT_DIVIDE	: '\\';
-TIMES			: '*';
-TRANSPOSE		: '\'';
-
-// Special Characters
-AT						: '@';
-COMMA					: ',' {maybeString = true;};
-DOT						: '.';
-SEMI_COLON				: ';' {maybeString = true;};
-LEFT_BRACE				: '{' {maybeString = true;};
-LEFT_PARENTHESIS		: '(' {maybeString = true;};
-LEFT_SQUARE_BRACKET		: '[' {maybeString = true;};
-QUESTION				: '?';
-RIGHT_BRACE				: '}' {maybeString = false;};
-RIGHT_PARENTHESIS		: ')' {maybeString = false;};
-RIGHT_SQUARE_BRACKET	: ']' {maybeString = false;};
-
-// Atoms - identifiers, strings, numbers, whitespace
-ID: [a-zA-Z] [a-zA-Z0-9_]* { maybeString = false; };
-
-IMAGINARY
-:	INT 'i'
-|	FLOAT 'i'
-;
-
-INT: DIGIT+;
-
-FLOAT
-:	DIGIT+ '.' DIGIT* EXPONENT?
-|	DIGIT+			  EXPONENT
-|		   '.' DIGIT+ EXPONENT?
-;
-
-fragment
-EXPONENT: ('e'|'E') ('+'|'-')? DIGIT+;
-
-fragment
-DIGIT: [0-9];
-
-STRING : {maybeString}? '\'' ( ~('\'' | '\r' | '\n') | '\'\'')* '\'';
 
