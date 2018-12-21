@@ -446,7 +446,7 @@ COMMENT			: '%' .*? NL  -> channel(HIDDEN);
 WS : [ \t] { maybeString = true; } -> skip;
 
 // Match the multiline break and skip it
-ELLIPSIS: '...' NL -> skip;
+ELLIPSIS: '...' -> skip;
 
 // Keywords
 BREAK		: 'break';
