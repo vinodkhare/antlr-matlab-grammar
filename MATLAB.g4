@@ -31,15 +31,22 @@ ELSEIF		: 'elseif';
 END			: 'end';
 FOR			: 'for';
 FUNCTION	: 'function';
+GET			: 'get';
 GLOBAL		: 'global';
 IF			: 'if';
 OTHERWISE	: 'otherwise';
 PERSISTENT	: 'persistent';
 PROPERTIES	: 'properties';
 RETURN		: 'return';
+SET			: 'set';
 SWITCH		: 'switch';
 TRY			: 'try';
 WHILE		: 'while';
+
+// Special Keywords //
+//////////////////////
+
+STATIC	: 'Static';
 
 // Two Character Operators
 ELMENT_WISE_LEFT_DIVIDE		: './';
@@ -111,6 +118,58 @@ STRING : {maybeString}? '\'' ( ~('\'' | '\r' | '\n') | '\'\'')* '\'';
 //// Parser Rules ////
 //////////////////////
 
+// Atoms //
+///////////
+
+atom_boolean
+:	'true'
+|	'false'
+;
+
+atom_empty_array
+:	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
+;
+
+atom_empty_cell
+:	LEFT_BRACE RIGHT_BRACE
+;
+
+atom_end
+:	END
+;
+
+atom_float
+:	FLOAT
+;
+
+atom_imaginary
+:	IMAGINARY
+;
+
+atom_index_all
+:	COLON
+;
+
+atom_integer
+:	INT
+;
+
+atom_meta
+:	QUESTION atom_var
+|	LEFT_BRACE (QUESTION atom_var (COMMA? QUESTION atom_var)*)? RIGHT_BRACE
+;
+
+atom_string
+:	STRING
+;
+
+atom_var
+:	ID
+|	GET
+|	SET
+|	STATIC
+;
+
 matlab_file:
 	( def_class | statement | def_function )*
 ;
@@ -125,19 +184,23 @@ def_class
 	(	LEFT_PARENTHESIS 
 		( attrib_class_boolean ( ASSIGN atom_boolean )? | attrib_class_meta ( ASSIGN atom_meta )? )*
 		RIGHT_PARENTHESIS
-	)?
-	atom_var 
-	LESS_THAN 
-	atom_var (BINARY_AND atom_var)*
+	)*
+
+	atom_var ( LESS_THAN atom_var (BINARY_AND atom_var)* )*
 
 	(	PROPERTIES
 		(	LEFT_PARENTHESIS
 			(	attrib_property_boolean ( ASSIGN atom_boolean )?
 			|	attrib_property_access  ( ASSIGN atom_access )?
-			)+	// One or more attributes
+			)
+			(	COMMA
+				(	attrib_property_boolean ( ASSIGN atom_boolean )?
+				|	attrib_property_access  ( ASSIGN atom_access )?
+				)
+			)*
 			RIGHT_PARENTHESIS
 		)?	// Zero or one property attribute blocks
-		atom_var*
+		( atom_var | st_assign )*
 		END
 	)*	// Zero or more property blocks
 	
@@ -145,7 +208,12 @@ def_class
 		(	LEFT_PARENTHESIS
 			(	attrib_method_boolean ( ASSIGN atom_boolean )?
 			|	attrib_method_access  ( ASSIGN atom_access )?
-			)+	// One or more attributes
+			)
+			(	COMMA
+				(	attrib_method_boolean ( ASSIGN atom_boolean )?
+				|	attrib_method_access  ( ASSIGN atom_access )?
+				)
+			)*
 			RIGHT_PARENTHESIS
 		)?	// Zero or one property attribute blocks
 		def_function*
@@ -156,7 +224,7 @@ def_class
 ;
 
 def_function:
-	FUNCTION (function_returns ASSIGN)? atom_var function_params?
+	FUNCTION (function_returns ASSIGN)? ((GET | SET) DOT)? atom_var function_params?
 	statement*
 	(END | RETURN)?
 ;
@@ -196,7 +264,7 @@ attrib_method_boolean
 :	'Abstract'
 |	'Hidden'
 |	'Sealed'
-|	'Static'
+|	STATIC
 ;
 
 attrib_method_access
@@ -222,7 +290,7 @@ st_assign
 
 | 	LEFT_SQUARE_BRACKET 
 	( NOT | atom_var | xpr_array_index | xpr_cell_index | xpr_field ) 
-	( COMMA ( NOT | atom_var | xpr_array_index | xpr_cell_index | xpr_field ) )* 
+	( COMMA ( NOT | atom_var | xpr_array_index | xpr_cell_index | xpr_field ) )*
   	RIGHT_SQUARE_BRACKET
 
 	ASSIGN 
@@ -284,7 +352,8 @@ function_returns
 |	LEFT_SQUARE_BRACKET atom_var (COMMA atom_var)* RIGHT_SQUARE_BRACKET
 ;
 
-statement:
+statement
+:
 	(	st_assign
 	| 	st_command
 	| 	st_if
@@ -300,7 +369,7 @@ statement:
 	| 	CONTINUE
 	| 	RETURN
 	)
-( COMMA | SEMI_COLON | NL )?
+( COMMA | SEMI_COLON )?
 ;
 
 // ## Expression Trees
@@ -439,7 +508,10 @@ xpr_field
 ;
 
 xpr_function
-:	atom_var LEFT_PARENTHESIS ((xpr_tree | xpr_handle) (COMMA (xpr_tree | xpr_handle))*)? RIGHT_PARENTHESIS
+:	atom_var 
+	LEFT_PARENTHESIS 
+	((xpr_tree | xpr_handle | atom_empty_cell) (COMMA (xpr_tree | xpr_handle | atom_empty_cell))*)? 
+	RIGHT_PARENTHESIS
 ;
 
 xpr_handle
@@ -448,51 +520,5 @@ xpr_handle
 ;
 
 command_argument
-:	ID
-;
-
-atom_boolean
-:	'true'
-|	'false'
-;
-
-atom_empty_array
-:	LEFT_SQUARE_BRACKET RIGHT_SQUARE_BRACKET
-;
-
-atom_empty_cell
-:	LEFT_BRACE RIGHT_BRACE
-;
-
-atom_end
-:	END
-;
-
-atom_float
-:	FLOAT
-;
-
-atom_imaginary
-:	IMAGINARY
-;
-
-atom_index_all
-:	COLON
-;
-
-atom_integer
-:	INT
-;
-
-atom_meta
-:	QUESTION atom_var
-|	LEFT_BRACE (QUESTION atom_var (COMMA? QUESTION atom_var)*)? RIGHT_BRACE
-;
-
-atom_string
-:	STRING
-;
-
-atom_var
 :	ID
 ;
