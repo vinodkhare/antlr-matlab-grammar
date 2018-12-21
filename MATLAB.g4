@@ -107,7 +107,10 @@ DIGIT: [0-9];
 
 STRING : {maybeString}? '\'' ( ~('\'' | '\r' | '\n') | '\'\'')* '\'';
 
-//// Parser Rules
+
+//// Parser Rules ////
+//////////////////////
+
 matlab_file:
 	( def_class | statement | def_function )*
 ;
@@ -213,13 +216,13 @@ atom_access
 // However, it does give a warning saying this is not recommended. Thus we don't parse this kind
 // of assignment.
 st_assign
-:	( id_var | xpr_array_index | xpr_cell_index | xpr_field )
+:	( atom_var | xpr_array_index | xpr_cell_index | xpr_field )
   	ASSIGN 
 	( atom_empty_cell | xpr_tree | xpr_handle )
 
 | 	LEFT_SQUARE_BRACKET 
-	( NOT | id_var | xpr_array_index | xpr_cell_index | xpr_field ) 
-	( COMMA ( NOT | id_var | xpr_array_index | xpr_cell_index | xpr_field ) )* 
+	( NOT | atom_var | xpr_array_index | xpr_cell_index | xpr_field ) 
+	( COMMA ( NOT | atom_var | xpr_array_index | xpr_cell_index | xpr_field ) )* 
   	RIGHT_SQUARE_BRACKET
 
 	ASSIGN 
@@ -273,12 +276,12 @@ st_while:
 ;
 
 function_params
-:	LEFT_PARENTHESIS (id_var (COMMA id_var)*)? RIGHT_PARENTHESIS
+:	LEFT_PARENTHESIS (atom_var (COMMA atom_var)*)? RIGHT_PARENTHESIS
 ;
 
 function_returns
-:	id_var
-|	LEFT_SQUARE_BRACKET id_var (COMMA id_var)* RIGHT_SQUARE_BRACKET
+:	atom_var
+|	LEFT_SQUARE_BRACKET atom_var (COMMA atom_var)* RIGHT_SQUARE_BRACKET
 ;
 
 statement:
@@ -292,7 +295,7 @@ statement:
 	| 	xpr_function
 	| 	xpr_field
 	| 	xpr_tree
-	| 	id_var
+	| 	atom_var
 	| 	BREAK
 	| 	CONTINUE
 	| 	RETURN
@@ -406,30 +409,30 @@ xpr_cell_
 // SYNTAX
 //	identifier (index_express [, indexexpression] ...)
 xpr_array_index
-:	(xpr_cell_index | id_var) LEFT_PARENTHESIS (atom_index_all | xpr_tree_) (COMMA (atom_index_all | xpr_tree_))* RIGHT_PARENTHESIS
+:	(xpr_cell_index | atom_var) LEFT_PARENTHESIS (atom_index_all | xpr_tree_) (COMMA (atom_index_all | xpr_tree_))* RIGHT_PARENTHESIS
 ;
 
 xpr_cell_index
-:	id_var LEFT_BRACE (atom_index_all | xpr_tree_) (COMMA (atom_index_all | xpr_tree_))* RIGHT_BRACE
+:	atom_var LEFT_BRACE (atom_index_all | xpr_tree_) (COMMA (atom_index_all | xpr_tree_))* RIGHT_BRACE
 ;
 
 // a.b == identifier DOT identifier
 // a.b.c == (a.b).c == field_access DOT identifier
 // a.b.c.f() == ((a.b).c).f()
 xpr_field
-:	id_var DOT id_var
-|	id_var DOT xpr_array_index
-|	id_var DOT xpr_cell_index
-|	id_var DOT xpr_function
-|	xpr_array_index DOT id_var
+:	atom_var DOT atom_var
+|	atom_var DOT xpr_array_index
+|	atom_var DOT xpr_cell_index
+|	atom_var DOT xpr_function
+|	xpr_array_index DOT atom_var
 |	xpr_array_index DOT xpr_array_index
 |	xpr_array_index DOT xpr_cell_index
 |	xpr_array_index DOT xpr_function
-|	xpr_cell_index DOT id_var
+|	xpr_cell_index DOT atom_var
 |	xpr_cell_index DOT xpr_array_index
 |	xpr_cell_index DOT xpr_cell_index
 |	xpr_cell_index DOT xpr_function
-|	xpr_field DOT id_var
+|	xpr_field DOT atom_var
 |	xpr_field DOT xpr_array_index
 |	xpr_field DOT xpr_cell_index
 |	xpr_field DOT xpr_function
@@ -478,11 +481,6 @@ id_super
 :	ID
 ;
 
-// ID of a variable
-id_var
-:	ID
-;
-
 atom_boolean
 :	'true'
 |	'false'
@@ -528,6 +526,3 @@ atom_string
 atom_var
 :	ID
 ;
-
-
-
